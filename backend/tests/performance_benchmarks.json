@@ -1,0 +1,251 @@
+{
+  "metadata": {
+    "name": "StudioBook Performance Benchmarks",
+    "version": "1.0.0",
+    "description": "Performance thresholds and benchmarks for CI/CD pipeline"
+  },
+  "thresholds": {
+    "api": {
+      "response_time": {
+        "health_check": {
+          "p50": 50,
+          "p95": 100,
+          "p99": 200,
+          "unit": "ms"
+        },
+        "list_endpoints": {
+          "p50": 100,
+          "p95": 200,
+          "p99": 400,
+          "unit": "ms"
+        },
+        "search_endpoints": {
+          "p50": 150,
+          "p95": 300,
+          "p99": 500,
+          "unit": "ms"
+        },
+        "authenticated_endpoints": {
+          "p50": 100,
+          "p95": 250,
+          "p99": 500,
+          "unit": "ms"
+        },
+        "write_endpoints": {
+          "p50": 150,
+          "p95": 300,
+          "p99": 600,
+          "unit": "ms"
+        }
+      },
+      "throughput": {
+        "health_check": {
+          "min_rps": 500,
+          "unit": "requests/second"
+        },
+        "list_endpoints": {
+          "min_rps": 200,
+          "unit": "requests/second"
+        },
+        "search_endpoints": {
+          "min_rps": 100,
+          "unit": "requests/second"
+        }
+      },
+      "error_rate": {
+        "max_percentage": 1.0,
+        "unit": "%"
+      }
+    },
+    "database": {
+      "query_time": {
+        "simple_query": {
+          "max_ms": 10,
+          "unit": "ms"
+        },
+        "complex_query": {
+          "max_ms": 100,
+          "unit": "ms"
+        },
+        "join_query": {
+          "max_ms": 150,
+          "unit": "ms"
+        }
+      },
+      "connections": {
+        "max_active": 50,
+        "unit": "connections"
+      }
+    },
+    "frontend": {
+      "lighthouse": {
+        "performance_score": 80,
+        "accessibility_score": 90,
+        "best_practices_score": 90,
+        "seo_score": 90
+      },
+      "core_web_vitals": {
+        "fcp": {
+          "max_ms": 2000,
+          "unit": "ms"
+        },
+        "lcp": {
+          "max_ms": 2500,
+          "unit": "ms"
+        },
+        "cls": {
+          "max_value": 0.1,
+          "unit": "score"
+        },
+        "tbt": {
+          "max_ms": 300,
+          "unit": "ms"
+        },
+        "tti": {
+          "max_ms": 3500,
+          "unit": "ms"
+        },
+        "si": {
+          "max_ms": 3000,
+          "unit": "ms"
+        }
+      },
+      "bundle_size": {
+        "total_js": {
+          "max_kb": 500,
+          "unit": "KB"
+        },
+        "total_css": {
+          "max_kb": 100,
+          "unit": "KB"
+        }
+      }
+    },
+    "flutter": {
+      "fps": {
+        "min_fps": 55,
+        "warning_fps": 45,
+        "unit": "fps"
+      },
+      "memory": {
+        "max_mb": 200,
+        "warning_mb": 150,
+        "unit": "MB"
+      },
+      "startup": {
+        "max_ms": 2000,
+        "warning_ms": 1500,
+        "unit": "ms"
+      },
+      "build_time": {
+        "max_ms": 120000,
+        "warning_ms": 90000,
+        "unit": "ms"
+      },
+      "frame_time": {
+        "max_ms": 16,
+        "warning_ms": 12,
+        "unit": "ms"
+      }
+    },
+    "docker": {
+      "build_time": {
+        "max_seconds": 300,
+        "warning_seconds": 180,
+        "unit": "seconds"
+      },
+      "image_size": {
+        "max_mb": 500,
+        "warning_mb": 300,
+        "unit": "MB"
+      },
+      "startup_time": {
+        "max_seconds": 30,
+        "warning_seconds": 15,
+        "unit": "seconds"
+      }
+    }
+  },
+  "benchmarks": {
+    "api_load_test": {
+      "name": "API Load Test",
+      "description": "Test API endpoints under load",
+      "endpoints": [
+        {
+          "path": "/api/health",
+          "method": "GET",
+          "concurrent": 50,
+          "total_requests": 1000,
+          "threshold": "health_check"
+        },
+        {
+          "path": "/api/v1/studios",
+          "method": "GET",
+          "concurrent": 25,
+          "total_requests": 500,
+          "threshold": "list_endpoints"
+        },
+        {
+          "path": "/api/v1/studios?search=music",
+          "method": "GET",
+          "concurrent": 25,
+          "total_requests": 500,
+          "threshold": "search_endpoints"
+        }
+      ]
+    },
+    "stress_test": {
+      "name": "Stress Test",
+      "description": "Test system under high load",
+      "scenarios": [
+        {
+          "name": "Spike Test",
+          "concurrent": 200,
+          "duration_seconds": 60,
+          "ramp_up_seconds": 10
+        },
+        {
+          "name": "Soak Test",
+          "concurrent": 50,
+          "duration_seconds": 300,
+          "ramp_up_seconds": 30
+        }
+      ]
+    },
+    "database_benchmark": {
+      "name": "Database Performance",
+      "description": "Test database query performance",
+      "queries": [
+        {
+          "name": "Simple Select",
+          "type": "simple",
+          "iterations": 1000,
+          "threshold": "simple_query"
+        },
+        {
+          "name": "Complex Join",
+          "type": "complex",
+          "iterations": 100,
+          "threshold": "join_query"
+        }
+      ]
+    },
+    "frontend_benchmark": {
+      "name": "Frontend Performance",
+      "description": "Test frontend build and runtime performance",
+      "metrics": [
+        "lighthouse_score",
+        "core_web_vitals",
+        "bundle_size",
+        "first_paint"
+      ]
+    }
+  },
+  "reporting": {
+    "format": "markdown",
+    "include_charts": true,
+    "historical_comparison": true,
+    "alert_on_regression": true,
+    "notification_channels": ["github", "slack"]
+  }
+}

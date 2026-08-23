@@ -1,0 +1,1414 @@
+{
+  "info": {
+    "name": "StudioBook API",
+    "description": "Complete API collection for StudioBook Music Studio Booking Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "studiobook"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "owner_token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"phone\": \"08123456789\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@studiobook.com\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "    console.log('Token saved: ' + jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@studiobook.com\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('admin_token', jsonData.data.token);",
+                  "    console.log('Admin token saved: ' + jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Owner",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@studiobook.com\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set('owner_token', jsonData.data.token);",
+                  "    console.log('Owner token saved: ' + jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"08987654321\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/auth/password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"password\",\n  \"password\": \"newpassword\",\n  \"password_confirmation\": \"newpassword\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Studios",
+      "item": [
+        {
+          "name": "List Studios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios?per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["studios"],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Studios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios?search=music&city=Jakarta",
+              "host": ["{{base_url}}"],
+              "path": ["studios"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "music"
+                },
+                {
+                  "key": "city",
+                  "value": "Jakarta"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Studio by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody"]
+            }
+          }
+        },
+        {
+          "name": "Get Studio Rooms",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody/rooms",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody", "rooms"]
+            }
+          }
+        },
+        {
+          "name": "Get Studio Equipment",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody/equipment",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody", "equipment"]
+            }
+          }
+        },
+        {
+          "name": "Get Studio Opening Hours",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody/opening-hours",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody", "opening-hours"]
+            }
+          }
+        },
+        {
+          "name": "Check Availability",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody/availability?date=2025-03-15&start_time=10:00&end_time=12:00",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody", "availability"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2025-03-15"
+                },
+                {
+                  "key": "start_time",
+                  "value": "10:00"
+                },
+                {
+                  "key": "end_time",
+                  "value": "12:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Studio Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/studios/studio-melody/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["studios", "studio-melody", "reviews"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "List My Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"]
+            }
+          }
+        },
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["bookings"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studio_id\": 1,\n  \"room_id\": 1,\n  \"date\": \"2025-03-15\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"12:00\",\n  \"notes\": \"Need extra microphones\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Booking Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings/1",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking by Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bookings/code/BK12345678",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "code", "BK12345678"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/bookings/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["bookings", "1", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/payments",
+              "host": ["{{base_url}}"],
+              "path": ["payments"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": 1,\n  \"payment_method\": \"bank_transfer\",\n  \"provider\": \"midtrans\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Payment Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payments/PAY12345678/status",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "PAY12345678", "status"]
+            }
+          }
+        },
+        {
+          "name": "Get Payment History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/payment-history",
+              "host": ["{{base_url}}"],
+              "path": ["payment-history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Favorites",
+      "item": [
+        {
+          "name": "List Favorites",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/favorites",
+              "host": ["{{base_url}}"],
+              "path": ["favorites"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Favorite",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/favorites/toggle",
+              "host": ["{{base_url}}"],
+              "path": ["favorites", "toggle"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studio_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Check Favorite Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/favorites/check/1",
+              "host": ["{{base_url}}"],
+              "path": ["favorites", "check", "1"]
+            }
+          }
+        },
+        {
+          "name": "Remove Favorite",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/favorites/1",
+              "host": ["{{base_url}}"],
+              "path": ["favorites", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["reviews"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studio_id\": 1,\n  \"booking_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Great studio!\",\n  \"is_anonymous\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get My Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/reviews/my-reviews",
+              "host": ["{{base_url}}"],
+              "path": ["reviews", "my-reviews"]
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/reviews/1",
+              "host": ["{{base_url}}"],
+              "path": ["reviews", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bands",
+      "item": [
+        {
+          "name": "List My Bands",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bands",
+              "host": ["{{base_url}}"],
+              "path": ["bands"]
+            }
+          }
+        },
+        {
+          "name": "Create Band",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/bands",
+              "host": ["{{base_url}}"],
+              "path": ["bands"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Band\",\n  \"description\": \"Rock band from Jakarta\",\n  \"genre\": \"Rock\",\n  \"member_emails\": [\"member1@example.com\", \"member2@example.com\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Get Band Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/bands/1",
+              "host": ["{{base_url}}"],
+              "path": ["bands", "1"]
+            }
+          }
+        },
+        {
+          "name": "Invite Member",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/bands/1/invite",
+              "host": ["{{base_url}}"],
+              "path": ["bands", "1", "invite"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newmember@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/notifications/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Membership",
+      "item": [
+        {
+          "name": "List Membership Plans",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/membership/plans",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Get Current Membership",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/membership/current",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "current"]
+            }
+          }
+        },
+        {
+          "name": "Subscribe to Plan",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/membership/subscribe",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "subscribe"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Cancel Membership",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/membership/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "cancel"]
+            }
+          }
+        },
+        {
+          "name": "Check Discount",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/membership/discount",
+              "host": ["{{base_url}}"],
+              "path": ["membership", "discount"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Promos",
+      "item": [
+        {
+          "name": "List Promos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/promos",
+              "host": ["{{base_url}}"],
+              "path": ["promos"]
+            }
+          }
+        },
+        {
+          "name": "Validate Promo Code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/promos/validate",
+              "host": ["{{base_url}}"],
+              "path": ["promos", "validate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WEEKEND10\",\n  \"booking_amount\": 200000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Referral",
+      "item": [
+        {
+          "name": "Get Referral Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/referral",
+              "host": ["{{base_url}}"],
+              "path": ["referral"]
+            }
+          }
+        },
+        {
+          "name": "Get Referral Code",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/referral/code",
+              "host": ["{{base_url}}"],
+              "path": ["referral", "code"]
+            }
+          }
+        },
+        {
+          "name": "Validate Referral Code",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/referral/validate",
+              "host": ["{{base_url}}"],
+              "path": ["referral", "validate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ABC12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Owner - Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "dashboard"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Today's Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/dashboard/today",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "dashboard", "today"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Analytics",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/analytics",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "analytics"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Revenue",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/revenue",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "revenue"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Owner - Studios",
+      "item": [
+        {
+          "name": "List My Studios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/studios",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "studios"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Studio",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/owner/studios",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "studios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New Studio\",\n  \"description\": \"Best studio in town\",\n  \"address\": \"Jl. Sudirman No. 123\",\n  \"city\": \"Jakarta\",\n  \"province\": \"DKI Jakarta\",\n  \"phone\": \"08123456789\",\n  \"email\": \"studio@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Studio",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/owner/studios/1",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "studios", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Studio Name\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Studio",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/owner/studios/1",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "studios", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Owner - Bookings",
+      "item": [
+        {
+          "name": "List Owner Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "bookings"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/owner/bookings/1/confirm",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "bookings", "1", "confirm"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complete Booking",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/owner/bookings/1/complete",
+              "host": ["{{base_url}}"],
+              "path": ["owner", "bookings", "1", "complete"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{owner_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "dashboard"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "stats"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get User Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "1"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/users/1/activate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "1", "activate"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/users/1/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "1", "deactivate"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Studios",
+      "item": [
+        {
+          "name": "List Studios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/studios",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "studios"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Studio Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/studios/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "studios", "stats"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Pending Verifications",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/studios/pending",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "studios", "pending"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify Studio",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/studios/1/verify",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "studios", "1", "verify"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate Studio",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/admin/studios/1/activate",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "studios", "1", "activate"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Bookings",
+      "item": [
+        {
+          "name": "List Bookings",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "bookings"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Booking Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/admin/bookings/stats",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "bookings", "stats"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

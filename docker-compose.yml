@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Backend API
+  # ============================================
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studiobook-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=studiobook
+      - DB_USERNAME=studiobook
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - CACHE_DRIVER=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - studiobook-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # Web Frontend
+  # ============================================
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: studiobook-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - studiobook-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ============================================
+  # MySQL Database
+  # ============================================
+  mysql:
+    image: mysql:8.0
+    container_name: studiobook-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: studiobook
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_USER: studiobook
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backend/docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - studiobook-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ============================================
+  # Redis Cache
+  # ============================================
+  redis:
+    image: redis:alpine
+    container_name: studiobook-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - studiobook-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Queue Worker
+  # ============================================
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studiobook-queue
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - ./backend:/var/www
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=studiobook
+      - DB_USERNAME=studiobook
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+    depends_on:
+      - api
+      - mysql
+      - redis
+    networks:
+      - studiobook-network
+
+  # ============================================
+  # Scheduler
+  # ============================================
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: studiobook-scheduler
+    restart: unless-stopped
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &\;
+        sleep 60;\n      done"
+    volumes:
+      - ./backend:/var/www
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=studiobook
+      - DB_USERNAME=studiobook
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+    depends_on:
+      - api
+      - mysql
+      - redis
+    networks:
+      - studiobook-network
+
+  # ============================================
+  # phpMyAdmin (Development)
+  # ============================================
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: studiobook-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: secret
+    depends_on:
+      - mysql
+    networks:
+      - studiobook-network
+
+  # ============================================
+  # Mailhog (Development)
+  # ============================================
+  mailhog:
+    image: mailhog/mailhog
+    container_name: studiobook-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - studiobook-network
+
+networks:
+  studiobook-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

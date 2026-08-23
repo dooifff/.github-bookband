@@ -1,0 +1,60 @@
+FROM php:8.2-fpm-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    libpng-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    libicu-dev \
+    oniguruma-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip intl opcache \
+    && pecl install redis && docker-php-ext-enable redis \
+    && rm -rf /var/cache/apk/*
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# PHP production settings
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+
+# OPcache configuration
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# Set working directory
+WORKDIR /var/www
+
+# Copy application
+COPY --chown=www-data:www-data . /var/www
+
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Link storage
+RUN php artisan storage:link || true
+
+# Cache configuration
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache \
+    && php artisan event:cache
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
+# Switch to www-data user
+USER www-data
+
+# Expose port
+EXPOSE 9000
+
+# Start PHP-FPM
+CMD ["php-fpm"]

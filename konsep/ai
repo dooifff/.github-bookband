@@ -1,0 +1,654 @@
+{
+  "project": {
+    "name": "StudioBook",
+    "type": "music_studio_booking_platform",
+    "goal": "Membangun platform booking studio band/musik yang modern, scalable, aman, dan memiliki nilai jual untuk customer, pemilik studio, dan administrator.",
+    "development_style": "vibecoding",
+    "language": "id-ID"
+  },
+  "master_instruction": {
+    "role": "Anda adalah senior software architect, Laravel backend engineer, React frontend engineer, Flutter engineer, UI/UX designer, database architect, QA engineer, security engineer, dan DevOps engineer.",
+    "objective": "Bangun aplikasi StudioBook secara bertahap, production-oriented, modular, maintainable, secure, responsive, dan mudah dikembangkan.",
+    "rules": [
+      "Jangan langsung membuat seluruh aplikasi sekaligus.",
+      "Kerjakan berdasarkan phase.",
+      "Sebelum mengubah kode, periksa struktur project yang sudah ada.",
+      "Jangan merusak fitur yang sudah berjalan.",
+      "Jangan membuat file duplicate tanpa alasan.",
+      "Jangan membuat kode dummy untuk fitur production.",
+      "Jangan hardcode credential, API key, URL sensitif, atau secret.",
+      "Gunakan environment variable untuk konfigurasi sensitif.",
+      "Gunakan database transaction untuk proses booking dan pembayaran yang kritis.",
+      "Business logic utama berada di backend Laravel.",
+      "Flutter dan React bertindak sebagai client.",
+      "Semua endpoint harus tervalidasi dan memiliki authorization.",
+      "Gunakan reusable component.",
+      "Pisahkan responsibility setiap class/module.",
+      "Jika menemukan bug, perbaiki root cause.",
+      "Setiap implementasi harus disertai cara testing.",
+      "Jika requirement ambigu dan memengaruhi implementasi secara material, tanyakan satu pertanyaan paling penting.",
+      "Jangan mengarang library atau API yang tidak tersedia.",
+      "Gunakan versi package yang kompatibel satu sama lain."
+    ]
+  },
+  "tech_stack": {
+    "backend": {
+      "framework": "Laravel",
+      "api": "REST API",
+      "authentication": "Laravel Sanctum",
+      "database": "MySQL",
+      "orm": "Eloquent",
+      "validation": "Form Request",
+      "authorization": "Policies/Gates",
+      "response": "API Resources",
+      "queue": "Laravel Queue",
+      "scheduler": "Laravel Scheduler"
+    },
+    "web": {
+      "framework": "React",
+      "styling": "Tailwind CSS",
+      "routing": "React Router",
+      "http_client": "Axios",
+      "architecture": "component_based"
+    },
+    "mobile": {
+      "framework": "Flutter",
+      "language": "Dart",
+      "http_client": "Dio",
+      "architecture": "feature_based_or_clean_architecture",
+      "notifications": "Firebase Cloud Messaging"
+    },
+    "services": {
+      "payment": "Midtrans atau Xendit melalui service abstraction",
+      "maps": "Google Maps atau Mapbox",
+      "storage": "Laravel Storage / S3-compatible storage",
+      "notification": "Firebase Cloud Messaging"
+    }
+  },
+  "roles": {
+    "customer": [
+      "register",
+      "login",
+      "search_studio",
+      "filter_studio",
+      "view_studio",
+      "view_equipment",
+      "view_schedule",
+      "create_booking",
+      "pay_booking",
+      "cancel_booking",
+      "view_booking_history",
+      "favorite_studio",
+      "review_studio",
+      "manage_band",
+      "manage_membership",
+      "receive_notification"
+    ],
+    "studio_owner": [
+      "manage_profile",
+      "manage_studio",
+      "manage_rooms",
+      "manage_equipment",
+      "manage_prices",
+      "manage_opening_hours",
+      "manage_blocked_schedule",
+      "manage_bookings",
+      "manage_promos",
+      "view_payments",
+      "view_revenue",
+      "view_analytics"
+    ],
+    "super_admin": [
+      "manage_users",
+      "manage_owners",
+      "manage_studios",
+      "verify_studios",
+      "manage_bookings",
+      "manage_payments",
+      "manage_reviews",
+      "manage_promos",
+      "manage_memberships",
+      "manage_categories",
+      "manage_settings",
+      "view_platform_analytics"
+    ]
+  },
+  "features": {
+    "discovery": [
+      "search studio",
+      "filter lokasi",
+      "filter harga",
+      "filter rating",
+      "filter equipment",
+      "filter fasilitas",
+      "sort jarak",
+      "sort harga",
+      "sort rating",
+      "studio terdekat"
+    ],
+    "booking": [
+      "real-time availability",
+      "pilih tanggal",
+      "pilih jam",
+      "pilih durasi",
+      "hitung harga server-side",
+      "voucher",
+      "booking confirmation",
+      "cancellation",
+      "booking history"
+    ],
+    "payment": [
+      "payment gateway abstraction",
+      "payment creation",
+      "webhook",
+      "paid",
+      "failed",
+      "expired",
+      "cancelled",
+      "refund-ready"
+    ],
+    "engagement": [
+      "rating",
+      "review",
+      "favorite",
+      "notification",
+      "voucher",
+      "membership",
+      "referral"
+    ],
+    "band": [
+      "create band",
+      "band profile",
+      "band members",
+      "invite member",
+      "band booking"
+    ],
+    "owner": [
+      "studio CRUD",
+      "room CRUD",
+      "equipment CRUD",
+      "opening hours",
+      "blocked schedule",
+      "booking management",
+      "revenue",
+      "occupancy",
+      "analytics",
+      "promo"
+    ],
+    "admin": [
+      "user management",
+      "owner management",
+      "studio verification",
+      "booking management",
+      "payment management",
+      "review moderation",
+      "promo",
+      "membership",
+      "analytics",
+      "settings"
+    ]
+  },
+  "booking_engine": {
+    "critical": true,
+    "rules": [
+      "Backend adalah sumber kebenaran availability.",
+      "Frontend tidak boleh dipercaya untuk harga atau availability final.",
+      "Cegah overlapping booking.",
+      "Cegah double booking pada concurrent request.",
+      "Gunakan database transaction.",
+      "Gunakan locking/constraint yang sesuai.",
+      "Validasi studio, room, status room, tanggal, jam operasional, blocked schedule, durasi, dan overlap.",
+      "Hitung subtotal, discount, dan total di server.",
+      "Jangan percaya harga dari client.",
+      "Sinkronkan booking dan payment state."
+    ],
+    "statuses": [
+      "pending",
+      "awaiting_payment",
+      "paid",
+      "confirmed",
+      "ongoing",
+      "completed",
+      "cancelled",
+      "expired",
+      "failed",
+      "refunded"
+    ]
+  },
+  "database": {
+    "core_tables": [
+      "users",
+      "studios",
+      "studio_rooms",
+      "studio_images",
+      "equipment",
+      "opening_hours",
+      "blocked_schedules",
+      "bookings",
+      "payments",
+      "reviews",
+      "favorites",
+      "promos",
+      "notifications",
+      "bands",
+      "band_members",
+      "membership_plans",
+      "user_memberships"
+    ],
+    "future_tables": [
+      "categories",
+      "facilities",
+      "room_facilities",
+      "booking_addons",
+      "referrals",
+      "transactions",
+      "withdrawals",
+      "audit_logs",
+      "platform_settings"
+    ],
+    "requirements": [
+      "Gunakan migrations, foreign keys, indexes, unique constraints, timestamps.",
+      "Gunakan soft delete jika sesuai.",
+      "Definisikan Eloquent relationships.",
+      "Gunakan factories dan seeders."
+    ]
+  },
+  "api": {
+    "prefix": "/api/v1",
+    "modules": [
+      "auth",
+      "users",
+      "studios",
+      "rooms",
+      "equipment",
+      "schedules",
+      "bookings",
+      "payments",
+      "reviews",
+      "favorites",
+      "promos",
+      "bands",
+      "memberships",
+      "notifications",
+      "owner",
+      "admin"
+    ],
+    "success_response": {
+      "success": true,
+      "message": "string",
+      "data": {},
+      "meta": {}
+    },
+    "error_response": {
+      "success": false,
+      "message": "string",
+      "errors": {}
+    },
+    "rules": [
+      "RESTful naming.",
+      "HTTP method yang tepat.",
+      "Validasi seluruh input.",
+      "Authorization endpoint protected.",
+      "Pagination list endpoint.",
+      "Jangan expose sensitive fields.",
+      "Gunakan HTTP status code yang benar."
+    ]
+  },
+  "ui": {
+    "theme": "premium dark music",
+    "palette": [
+      "black",
+      "dark gray",
+      "white",
+      "gold/yellow accent"
+    ],
+    "requirements": [
+      "responsive",
+      "mobile friendly",
+      "accessible",
+      "loading",
+      "skeleton",
+      "empty state",
+      "error state",
+      "toast",
+      "modal",
+      "confirmation dialog"
+    ]
+  },
+  "flutter": {
+    "bottom_navigation": [
+      "Home",
+      "Explore",
+      "Bookings",
+      "Favorites",
+      "Profile"
+    ],
+    "screens": [
+      "Splash",
+      "Login",
+      "Register",
+      "Home",
+      "Search",
+      "Studio List",
+      "Studio Detail",
+      "Schedule",
+      "Booking",
+      "Payment",
+      "Booking Success",
+      "My Booking",
+      "Booking Detail",
+      "Favorite",
+      "Profile",
+      "Notification",
+      "Band",
+      "Membership"
+    ],
+    "rules": [
+      "Jangan duplikasi business logic backend.",
+      "Gunakan service/repository layer.",
+      "Handle loading/error/empty state.",
+      "Simpan token secara aman.",
+      "API base URL melalui configuration."
+    ]
+  },
+  "security": [
+    "password hashing",
+    "Sanctum authentication",
+    "authorization policies",
+    "request validation",
+    "rate limiting",
+    "CORS",
+    "secure file upload",
+    "MIME validation",
+    "file size limits",
+    "mass assignment protection",
+    "SQL injection prevention",
+    "XSS prevention",
+    "environment variables untuk secrets",
+    "jangan expose payment secret",
+    "jangan percaya role dari client",
+    "validasi payment webhook"
+  ],
+  "project_structure": {
+    "laravel": [
+      "app/Http/Controllers",
+      "app/Http/Requests",
+      "app/Http/Resources",
+      "app/Models",
+      "app/Services",
+      "app/Policies",
+      "app/Notifications",
+      "database/migrations",
+      "database/factories",
+      "database/seeders",
+      "routes/api.php",
+      "config",
+      ".env"
+    ],
+    "react": [
+      "src/components",
+      "src/pages",
+      "src/layouts",
+      "src/hooks",
+      "src/services",
+      "src/routes",
+      "src/utils",
+      "src/assets"
+    ],
+    "flutter": [
+      "lib/core",
+      "lib/models",
+      "lib/services",
+      "lib/repositories",
+      "lib/screens",
+      "lib/widgets",
+      "lib/providers",
+      "lib/utils"
+    ]
+  },
+  "development_phases": [
+    {
+      "phase": 1,
+      "name": "Foundation",
+      "tasks": [
+        "Laravel API",
+        "MySQL",
+        "Sanctum",
+        "React admin",
+        "Flutter",
+        "environment",
+        "architecture",
+        "README",
+        "Git"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Database",
+      "tasks": [
+        "migrations",
+        "models",
+        "relationships",
+        "factories",
+        "seeders"
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Authentication",
+      "tasks": [
+        "register",
+        "login",
+        "logout",
+        "profile",
+        "password reset",
+        "role authorization"
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Studio Management",
+      "tasks": [
+        "studio CRUD",
+        "room CRUD",
+        "equipment CRUD",
+        "images",
+        "opening hours"
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Schedule Engine",
+      "tasks": [
+        "availability",
+        "blocked schedules",
+        "opening hours",
+        "overlap detection"
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "Booking Engine",
+      "tasks": [
+        "booking",
+        "price calculation",
+        "voucher",
+        "transaction",
+        "double booking prevention",
+        "statuses"
+      ]
+    },
+    {
+      "phase": 7,
+      "name": "Payment",
+      "tasks": [
+        "payment abstraction",
+        "payment creation",
+        "webhook",
+        "status synchronization"
+      ]
+    },
+    {
+      "phase": 8,
+      "name": "Customer Features",
+      "tasks": [
+        "favorites",
+        "reviews",
+        "notifications",
+        "booking history"
+      ]
+    },
+    {
+      "phase": 9,
+      "name": "Band",
+      "tasks": [
+        "band profile",
+        "members",
+        "invitations",
+        "band booking"
+      ]
+    },
+    {
+      "phase": 10,
+      "name": "Membership and Promotion",
+      "tasks": [
+        "membership plans",
+        "subscriptions",
+        "vouchers",
+        "referrals"
+      ]
+    },
+    {
+      "phase": 11,
+      "name": "Owner Dashboard",
+      "tasks": [
+        "booking analytics",
+        "revenue",
+        "occupancy",
+        "studio management"
+      ]
+    },
+    {
+      "phase": 12,
+      "name": "Admin Dashboard",
+      "tasks": [
+        "platform management",
+        "verification",
+        "analytics",
+        "settings"
+      ]
+    },
+    {
+      "phase": 13,
+      "name": "Flutter",
+      "tasks": [
+        "customer mobile app",
+        "API integration",
+        "authentication",
+        "booking flow",
+        "notifications"
+      ]
+    },
+    {
+      "phase": 14,
+      "name": "Testing",
+      "tasks": [
+        "unit tests",
+        "feature tests",
+        "API tests",
+        "concurrency tests",
+        "payment webhook tests",
+        "Flutter tests"
+      ]
+    },
+    {
+      "phase": 15,
+      "name": "Security and Performance",
+      "tasks": [
+        "security audit",
+        "query optimization",
+        "indexes",
+        "rate limits",
+        "caching",
+        "queue optimization"
+      ]
+    },
+    {
+      "phase": 16,
+      "name": "Deployment",
+      "tasks": [
+        "production environment",
+        "database migration",
+        "storage",
+        "queue worker",
+        "scheduler",
+        "HTTPS",
+        "monitoring",
+        "backup"
+      ]
+    }
+  ],
+  "vibecoding_protocol": {
+    "before_change": [
+      "Inspect existing files",
+      "Understand architecture",
+      "Identify dependencies",
+      "Identify affected database tables",
+      "Identify affected API endpoints",
+      "Identify affected UI screens"
+    ],
+    "during_change": [
+      "Make smallest coherent change",
+      "Keep naming consistent",
+      "Reuse existing components/services",
+      "Avoid unnecessary refactoring",
+      "Keep backend authority for business rules"
+    ],
+    "after_change": [
+      "Check imports",
+      "Check routes",
+      "Check relationships",
+      "Check validation",
+      "Check authorization",
+      "Check API response",
+      "Check UI states",
+      "Provide testing steps",
+      "Provide next logical task"
+    ]
+  },
+  "output_protocol": [
+    "Analysis",
+    "Files to create/change",
+    "Implementation",
+    "Database changes",
+    "API changes",
+    "Testing",
+    "Potential risks",
+    "Next step"
+  ],
+  "mvp_priority": [
+    "authentication",
+    "studio discovery",
+    "studio detail",
+    "room",
+    "real-time availability",
+    "anti-double-booking",
+    "booking",
+    "payment",
+    "booking history",
+    "owner dashboard"
+  ],
+  "premium_features": [
+    "dynamic pricing",
+    "membership",
+    "referral",
+    "loyalty points",
+    "promoted studios",
+    "recording studio booking",
+    "equipment add-ons",
+    "band collaboration",
+    "advanced analytics",
+    "AI studio recommendation"
+  ],
+  "initial_command": "Mulai PHASE 1 saja. Audit kebutuhan project, buat blueprint arsitektur folder dan dependency plan. Jangan mengimplementasikan phase berikutnya sebelum phase 1 selesai."
+}

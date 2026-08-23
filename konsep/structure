@@ -1,0 +1,24 @@
+MVP 1
+│
+├── Login/Register
+├── Studio
+├── Room
+├── Schedule
+├── Booking
+└── Payment
+       ↓
+MVP 2
+│
+├── Review
+├── Favorite
+├── Promo
+├── Notification
+└── Owner Dashboard
+       ↓
+MVP 3
+│
+├── Band
+├── Membership
+├── Referral
+├── Analytics
+└── Dynamic Pricing

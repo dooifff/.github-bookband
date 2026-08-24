@@ -15,9 +15,7 @@ export default function CustomerDashboard() {
   const [data, setData] = useState<CustomerData | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchDashboard()
-  }, [])
+  useEffect(() => { fetchDashboard() }, [])
 
   const fetchDashboard = async () => {
     try {
@@ -26,19 +24,15 @@ export default function CustomerDashboard() {
         api.get('/favorites'),
         api.get('/notifications?per_page=3'),
       ])
-
       const bookings = bookingsRes.data.data || []
       const favs = favRes.data.data || []
       const notifs = notifRes.data.data || []
-
       setData({
         total_bookings: bookings.length,
         pending_bookings: bookings.filter((b: any) => b.status === 'pending').length,
         completed_bookings: bookings.filter((b: any) => b.status === 'completed').length,
         total_favorites: favs.length,
-        upcoming_bookings: bookings.filter((b: any) =>
-          ['pending', 'confirmed', 'awaiting_payment'].includes(b.status)
-        ).slice(0, 5),
+        upcoming_bookings: bookings.filter((b: any) => ['pending', 'confirmed', 'awaiting_payment'].includes(b.status)).slice(0, 5),
         notifications: notifs.slice(0, 3),
       })
     } catch (error) {
@@ -48,50 +42,48 @@ export default function CustomerDashboard() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
 
   if (loading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-accent animate-pulse">Loading dashboard...</div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+            <p className="text-text-muted text-sm">Loading dashboard...</p>
+          </div>
         </div>
       </AdminLayout>
     )
   }
 
   const statCards = [
-    { title: 'My Bookings', value: data?.total_bookings || 0, icon: '📅', color: 'bg-blue-500/10 text-blue-500' },
-    { title: 'Pending', value: data?.pending_bookings || 0, icon: '⏳', color: 'bg-amber-500/10 text-amber-500' },
-    { title: 'Completed', value: data?.completed_bookings || 0, icon: '✅', color: 'bg-green-500/10 text-green-500' },
-    { title: 'Favorites', value: data?.total_favorites || 0, icon: '❤️', color: 'bg-red-500/10 text-red-500' },
+    { title: 'My Bookings', value: data?.total_bookings || 0, icon: '📅', iconBg: 'bg-blue-500/10' },
+    { title: 'Pending', value: data?.pending_bookings || 0, icon: '⏳', iconBg: 'bg-warning/10' },
+    { title: 'Completed', value: data?.completed_bookings || 0, icon: '✅', iconBg: 'bg-success/10' },
+    { title: 'Favorites', value: data?.total_favorites || 0, icon: '❤️', iconBg: 'bg-red-500/10' },
   ]
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">My Dashboard</h1>
-          <p className="text-text-secondary">Welcome back! Manage your bookings and studios.</p>
+        <div className="animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">My Dashboard</h1>
+          <p className="text-text-secondary mt-1 text-sm">Welcome back! Manage your bookings and studios.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statCards.map((stat) => (
-            <div key={stat.title} className="bg-surface border border-border rounded-xl p-5">
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          {statCards.map((stat, i) => (
+            <div key={stat.title} className={`card-luxury p-5 animate-fade-in-up stagger-${i + 1}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-text-muted text-sm">{stat.title}</p>
-                  <p className="text-2xl font-bold text-text-primary mt-1">{stat.value}</p>
+                  <p className="text-text-muted text-xs font-medium tracking-wide uppercase">{stat.title}</p>
+                  <p className="text-2xl font-bold text-text-primary mt-2 tracking-tight">{stat.value}</p>
                 </div>
-                <div className={`w-11 h-11 rounded-lg flex items-center justify-center text-xl ${stat.color}`}>
+                <div className={`w-11 h-11 rounded-xl ${stat.iconBg} flex items-center justify-center text-lg`}>
                   {stat.icon}
                 </div>
               </div>
@@ -101,79 +93,78 @@ export default function CustomerDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a href="/customer/studios" className="p-4 bg-surface border border-border rounded-xl hover:border-accent transition-colors text-center">
-            <span className="text-2xl mb-2 block">🔍</span>
-            <span className="text-text-primary font-medium text-sm">Find Studios</span>
-          </a>
-          <a href="/customer/bookings" className="p-4 bg-surface border border-border rounded-xl hover:border-accent transition-colors text-center">
-            <span className="text-2xl mb-2 block">📅</span>
-            <span className="text-text-primary font-medium text-sm">My Bookings</span>
-          </a>
-          <a href="/customer/favorites" className="p-4 bg-surface border border-border rounded-xl hover:border-accent transition-colors text-center">
-            <span className="text-2xl mb-2 block">❤️</span>
-            <span className="text-text-primary font-medium text-sm">Favorites</span>
-          </a>
-          <a href="/customer/notifications" className="p-4 bg-surface border border-border rounded-xl hover:border-accent transition-colors text-center">
-            <span className="text-2xl mb-2 block">🔔</span>
-            <span className="text-text-primary font-medium text-sm">Notifications</span>
-          </a>
+          {[
+            { href: '/customer/studios', icon: '🔍', label: 'Find Studios' },
+            { href: '/customer/bookings', icon: '📅', label: 'My Bookings' },
+            { href: '/customer/favorites', icon: '❤️', label: 'Favorites' },
+            { href: '/customer/notifications', icon: '🔔', label: 'Notifications' },
+          ].map((action) => (
+            <a
+              key={action.href}
+              href={action.href}
+              className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-surface-light/50 border border-border/50 hover:border-accent/20 hover:bg-surface-lighter/40 transition-all duration-300"
+            >
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{action.icon}</span>
+              <span className="text-text-secondary text-sm font-medium group-hover:text-text-primary transition-colors">{action.label}</span>
+            </a>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Upcoming Bookings */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-primary">Upcoming Bookings</h2>
-              <a href="/customer/bookings" className="text-accent text-sm hover:underline">View all</a>
+          <div className="card-luxury p-6 animate-fade-in-up stagger-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-text-primary">Upcoming Bookings</h2>
+              <a href="/customer/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-1">
               {data?.upcoming_bookings?.map((booking: any) => (
-                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div key={booking.id} className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl hover:bg-surface-lighter/40 transition-colors">
                   <div>
-                    <p className="text-text-primary font-medium">{booking.studio?.name || 'Studio'}</p>
-                    <p className="text-text-muted text-sm">{booking.room?.name} • {booking.date}</p>
+                    <p className="text-text-primary text-sm font-medium">{booking.studio?.name || 'Studio'}</p>
+                    <p className="text-text-muted text-xs">{booking.room?.name} • {booking.date}</p>
                   </div>
                   <div className="text-right">
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      booking.status === 'confirmed' ? 'bg-success/20 text-success' :
-                      booking.status === 'pending' ? 'bg-warning/20 text-warning' :
-                      'bg-accent/20 text-accent'
+                    <span className={`inline-block px-2 py-0.5 text-[0.65rem] font-medium rounded-full ${
+                      booking.status === 'confirmed' ? 'bg-success/10 text-success' :
+                      booking.status === 'pending' ? 'bg-warning/10 text-warning' :
+                      'bg-accent/10 text-accent'
                     }`}>
-                      {booking.status === 'confirmed' ? 'Confirmed' :
-                       booking.status === 'pending' ? 'Pending' :
-                       booking.status === 'awaiting_payment' ? 'Awaiting Payment' :
-                       booking.status}
+                      {booking.status === 'confirmed' ? 'Confirmed' : booking.status === 'pending' ? 'Pending' : 'Awaiting Payment'}
                     </span>
-                    <p className="text-text-muted text-sm mt-1">{formatCurrency(booking.total)}</p>
+                    <p className="text-text-muted text-xs mt-0.5">{formatCurrency(booking.total)}</p>
                   </div>
                 </div>
               ))}
               {(!data?.upcoming_bookings || data.upcoming_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-4">No upcoming bookings</p>
+                <p className="text-text-muted text-center py-8 text-sm">No upcoming bookings</p>
               )}
             </div>
           </div>
 
           {/* Notifications */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-primary">Notifications</h2>
-              <a href="/customer/notifications" className="text-accent text-sm hover:underline">View all</a>
+          <div className="card-luxury p-6 animate-fade-in-up stagger-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-text-primary">Notifications</h2>
+              <a href="/customer/notifications" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-1">
               {data?.notifications?.map((notif: any) => (
-                <div key={notif.id} className={`flex items-start gap-3 py-2 border-b border-border last:border-0 ${!notif.is_read ? 'bg-accent/5 -mx-2 px-2 rounded' : ''}`}>
-                  <div className="w-8 h-8 bg-accent/10 rounded-full flex items-center justify-center text-sm flex-shrink-0">
+                <div key={notif.id} className={`flex items-start gap-3 py-3 px-3 -mx-3 rounded-xl transition-colors ${!notif.is_read ? 'bg-accent/[0.03]' : 'hover:bg-surface-lighter/30'}`}>
+                  <div className="w-8 h-8 rounded-lg bg-surface-lighter flex items-center justify-center text-sm flex-shrink-0 mt-0.5">
                     {notif.type === 'booking' ? '📅' : notif.type === 'payment' ? '💳' : '🔔'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-text-primary font-medium text-sm">{notif.title}</p>
-                    <p className="text-text-muted text-xs">{notif.body}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-text-primary text-sm font-medium">{notif.title}</p>
+                      {!notif.is_read && <span className="w-1.5 h-1.5 rounded-full bg-accent flex-shrink-0" />}
+                    </div>
+                    <p className="text-text-muted text-xs mt-0.5">{notif.body}</p>
                   </div>
                 </div>
               ))}
               {(!data?.notifications || data.notifications.length === 0) && (
-                <p className="text-text-muted text-center py-4">No notifications</p>
+                <p className="text-text-muted text-center py-8 text-sm">No notifications</p>
               )}
             </div>
           </div>

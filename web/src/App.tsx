@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './hooks/useAuth'
+import LandingPage from './pages/landing/LandingPage'
 import Login from './pages/auth/Login'
 import Dashboard from './pages/dashboard/Dashboard'
 import UsersPage from './pages/users/UsersPage'
@@ -27,7 +28,10 @@ function RoleRedirect() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary">
-        <div className="text-accent text-xl animate-pulse">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+          <p className="text-text-muted text-sm">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -40,7 +44,7 @@ function RoleRedirect() {
   switch (user.role) {
     case 'admin':
     case 'super_admin':
-      return <Navigate to="/" replace />
+      return <Navigate to="/admin" replace />
     case 'owner':
       return <Navigate to="/owner/dashboard" replace />
     case 'customer':
@@ -56,7 +60,10 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary">
-        <div className="text-accent text-xl animate-pulse">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+          <p className="text-text-muted text-sm">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -79,7 +86,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode;
       switch (userRole) {
         case 'owner': return <Navigate to="/owner/dashboard" replace />
         case 'customer': return <Navigate to="/customer/dashboard" replace />
-        default: return <Navigate to="/" replace />
+        default: return <Navigate to="/admin" replace />
       }
     }
   }
@@ -93,10 +100,11 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public Routes */}
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={user ? <RoleRedirect /> : <Login />} />
 
       {/* Admin Routes */}
-      <Route path="/" element={
+      <Route path="/admin" element={
         <ProtectedRoute requiredRole="admin">
           <Dashboard />
         </ProtectedRoute>
@@ -191,8 +199,8 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* Catch all - redirect based on role */}
-      <Route path="*" element={<RoleRedirect />} />
+      {/* Catch all - show landing page */}
+      <Route path="*" element={<LandingPage />} />
     </Routes>
   )
 }

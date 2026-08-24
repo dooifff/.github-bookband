@@ -17,9 +17,7 @@ export default function CustomerNotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
 
-  useEffect(() => {
-    fetchNotifications()
-  }, [])
+  useEffect(() => { fetchNotifications() }, [])
 
   const fetchNotifications = async () => {
     try {
@@ -39,9 +37,7 @@ export default function CustomerNotificationsPage() {
   const markAsRead = async (id: number) => {
     try {
       await api.post(`/notifications/${id}/read`)
-      setNotifications(notifications.map(n =>
-        n.id === id ? { ...n, is_read: true } : n
-      ))
+      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n))
       setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
       console.error('Failed to mark as read:', error)
@@ -70,18 +66,15 @@ export default function CustomerNotificationsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Notifications</h1>
-            <p className="text-text-secondary">
-              {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Notifications</h1>
+            <p className="text-text-secondary mt-1 text-sm">
+              {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
             </p>
           </div>
           {unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent-hover transition-colors text-sm"
-            >
+            <button onClick={markAllAsRead} className="btn-gold text-sm">
               Mark all as read
             </button>
           )}
@@ -89,35 +82,38 @@ export default function CustomerNotificationsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-accent animate-pulse">Loading notifications...</div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+              <p className="text-text-muted text-sm">Loading notifications...</p>
+            </div>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="bg-surface border border-border rounded-xl p-12 text-center">
+          <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">🔔</span>
             <p className="text-text-muted text-lg">No notifications</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {notifications.map((notif) => (
+            {notifications.map((notif, i) => (
               <div
                 key={notif.id}
-                className={`bg-surface border rounded-xl p-4 flex items-start gap-4 transition-colors ${
-                  notif.is_read ? 'border-border' : 'border-accent/30 bg-accent/5'
+                className={`card-luxury p-5 flex items-start gap-4 cursor-pointer animate-fade-in-up stagger-${Math.min(i + 1, 8)} ${
+                  !notif.is_read ? 'border-accent/15 bg-accent/[0.02]' : ''
                 }`}
                 onClick={() => !notif.is_read && markAsRead(notif.id)}
               >
-                <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${
+                  !notif.is_read ? 'bg-accent/10 border border-accent/10' : 'bg-surface-lighter'
+                }`}>
                   {getIcon(notif.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-text-primary font-medium">{notif.title}</p>
-                    {!notif.is_read && (
-                      <span className="w-2 h-2 bg-accent rounded-full"></span>
-                    )}
+                    <p className="text-text-primary text-sm font-medium">{notif.title}</p>
+                    {!notif.is_read && <span className="w-2 h-2 bg-accent rounded-full flex-shrink-0" />}
                   </div>
                   <p className="text-text-secondary text-sm mt-0.5">{notif.body}</p>
-                  <p className="text-text-muted text-xs mt-1">
+                  <p className="text-text-muted text-xs mt-1.5">
                     {new Date(notif.created_at).toLocaleString('id-ID')}
                   </p>
                 </div>

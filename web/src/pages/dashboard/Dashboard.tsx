@@ -16,9 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    fetchDashboard()
-  }, [])
+  useEffect(() => { fetchDashboard() }, [])
 
   const fetchDashboard = async () => {
     try {
@@ -34,18 +32,24 @@ export default function Dashboard() {
     }
   }
 
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
+
   const statCards = [
-    { title: 'Total Users', value: stats?.total_users || 0, icon: '👥', color: 'bg-blue-500/10 text-blue-500' },
-    { title: 'Total Studios', value: stats?.total_studios || 0, icon: '🏠', color: 'bg-green-500/10 text-green-500' },
-    { title: 'Total Bookings', value: stats?.total_bookings || 0, icon: '📅', color: 'bg-purple-500/10 text-purple-500' },
-    { title: 'Total Revenue', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', color: 'bg-amber-500/10 text-amber-500' },
+    { title: 'Total Users', value: stats?.total_users || 0, icon: '👥', accent: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/10' },
+    { title: 'Total Studios', value: stats?.total_studios || 0, icon: '🏠', accent: 'from-success/15 to-success/5', iconBg: 'bg-success/10' },
+    { title: 'Total Bookings', value: stats?.total_bookings || 0, icon: '📅', accent: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/10' },
+    { title: 'Total Revenue', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', accent: 'from-accent/15 to-accent/5', iconBg: 'bg-accent/10' },
   ]
 
   if (loading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-accent animate-pulse">Loading dashboard...</div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+            <p className="text-text-muted text-sm">Loading dashboard...</p>
+          </div>
         </div>
       </AdminLayout>
     )
@@ -56,13 +60,8 @@ export default function Dashboard() {
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-error mb-4">{error}</p>
-            <button
-              onClick={fetchDashboard}
-              className="px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent-hover transition-colors"
-            >
-              Retry
-            </button>
+            <p className="text-danger mb-4">{error}</p>
+            <button onClick={fetchDashboard} className="btn-gold text-sm">Retry</button>
           </div>
         </div>
       </AdminLayout>
@@ -71,23 +70,23 @@ export default function Dashboard() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-          <p className="text-text-secondary">Welcome back! Here's what's happening.</p>
+        <div className="animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dashboard</h1>
+          <p className="text-text-secondary mt-1 text-sm">Welcome back! Here's what's happening today.</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat) => (
-            <div key={stat.title} className="bg-surface border border-border rounded-xl p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {statCards.map((stat, i) => (
+            <div key={stat.title} className={`card-luxury p-6 animate-fade-in-up stagger-${i + 1}`}>
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-text-muted text-sm">{stat.title}</p>
-                  <p className="text-2xl font-bold text-text-primary mt-1">{stat.value}</p>
+                  <p className="text-text-muted text-xs font-medium tracking-wide uppercase">{stat.title}</p>
+                  <p className="text-2xl font-bold text-text-primary mt-2 tracking-tight">{stat.value}</p>
                 </div>
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${stat.color}`}>
+                <div className={`w-11 h-11 rounded-xl ${stat.iconBg} flex items-center justify-center text-lg`}>
                   {stat.icon}
                 </div>
               </div>
@@ -95,96 +94,94 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Recent Activity */}
+        {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Bookings */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Recent Bookings</h2>
-            <div className="space-y-3">
+          <div className="card-luxury p-6 animate-fade-in-up stagger-5">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-text-primary">Recent Bookings</h2>
+              <a href="/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+            </div>
+            <div className="space-y-1">
               {stats?.recent_bookings?.slice(0, 5).map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <div>
-                    <p className="text-text-primary font-medium">{booking.user?.name || 'User'}</p>
-                    <p className="text-text-muted text-sm">{booking.studio?.name || 'Studio'}</p>
+                <div key={booking.id} className="flex items-center justify-between py-3 px-3 -mx-3 rounded-xl hover:bg-surface-lighter/40 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-surface-lighter flex items-center justify-center text-sm">
+                      {booking.user?.name?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-text-primary text-sm font-medium">{booking.user?.name || 'User'}</p>
+                      <p className="text-text-muted text-xs">{booking.studio?.name || 'Studio'}</p>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <span className={`px-2 py-1 text-xs rounded ${
-                      booking.status === 'confirmed' ? 'bg-success/20 text-success' :
-                      booking.status === 'pending' ? 'bg-warning/20 text-warning' :
-                      'bg-text-muted/20 text-text-muted'
-                    }`}>
-                      {booking.status}
-                    </span>
-                    <p className="text-text-muted text-sm mt-1">{formatCurrency(booking.total_amount)}</p>
+                    <span className={`inline-block px-2 py-0.5 text-[0.65rem] font-medium rounded-full ${
+                      booking.status === 'confirmed' ? 'bg-success/10 text-success' :
+                      booking.status === 'pending' ? 'bg-warning/10 text-warning' :
+                      'bg-text-muted/10 text-text-muted'
+                    }`}>{booking.status}</span>
+                    <p className="text-text-muted text-xs mt-0.5">{formatCurrency(booking.total_amount)}</p>
                   </div>
                 </div>
               ))}
               {(!stats?.recent_bookings || stats.recent_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-4">No recent bookings</p>
+                <p className="text-text-muted text-center py-8 text-sm">No recent bookings</p>
               )}
             </div>
           </div>
 
           {/* Recent Users */}
-          <div className="bg-surface border border-border rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">Recent Users</h2>
-            <div className="space-y-3">
+          <div className="card-luxury p-6 animate-fade-in-up stagger-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-text-primary">Recent Users</h2>
+              <a href="/users" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+            </div>
+            <div className="space-y-1">
               {stats?.recent_users?.slice(0, 5).map((user) => (
-                <div key={user.id} className="flex items-center gap-3 py-2 border-b border-border last:border-0">
-                  <div className="w-10 h-10 bg-accent/20 rounded-full flex items-center justify-center">
-                    <span className="text-accent font-semibold">{user.name?.charAt(0)}</span>
+                <div key={user.id} className="flex items-center gap-3 py-3 px-3 -mx-3 rounded-xl hover:bg-surface-lighter/40 transition-colors">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center border border-accent/10">
+                    <span className="text-accent text-xs font-semibold">{user.name?.charAt(0)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-text-primary font-medium truncate">{user.name}</p>
-                    <p className="text-text-muted text-sm truncate">{user.email}</p>
+                    <p className="text-text-primary text-sm font-medium truncate">{user.name}</p>
+                    <p className="text-text-muted text-xs truncate">{user.email}</p>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded ${
-                    user.role === 'admin' ? 'bg-accent/20 text-accent' :
-                    user.role === 'owner' ? 'bg-success/20 text-success' :
-                    'bg-text-muted/20 text-text-muted'
-                  }`}>
-                    {user.role}
-                  </span>
+                  <span className={`px-2 py-0.5 text-[0.65rem] font-medium rounded-full ${
+                    user.role === 'admin' ? 'bg-accent/10 text-accent' :
+                    user.role === 'owner' ? 'bg-success/10 text-success' :
+                    'bg-text-muted/10 text-text-muted'
+                  }`}>{user.role}</span>
                 </div>
               ))}
               {(!stats?.recent_users || stats.recent_users.length === 0) && (
-                <p className="text-text-muted text-center py-4">No recent users</p>
+                <p className="text-text-muted text-center py-8 text-sm">No recent users</p>
               )}
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-surface border border-border rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h2>
+        <div className="card-luxury p-6 animate-fade-in-up stagger-7">
+          <h2 className="text-base font-semibold text-text-primary mb-5">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <a href="/users" className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left block">
-              <span className="text-2xl mb-2 block">👥</span>
-              <span className="text-text-primary font-medium">Manage Users</span>
-            </a>
-            <a href="/studios" className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left block">
-              <span className="text-2xl mb-2 block">🏠</span>
-              <span className="text-text-primary font-medium">Manage Studios</span>
-            </a>
-            <a href="/bookings" className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left block">
-              <span className="text-2xl mb-2 block">📅</span>
-              <span className="text-text-primary font-medium">View Bookings</span>
-            </a>
-            <a href="/settings" className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left block">
-              <span className="text-2xl mb-2 block">⚙️</span>
-              <span className="text-text-primary font-medium">Settings</span>
-            </a>
+            {[
+              { href: '/users', icon: '👥', label: 'Manage Users' },
+              { href: '/studios', icon: '🏠', label: 'Manage Studios' },
+              { href: '/bookings', icon: '📅', label: 'View Bookings' },
+              { href: '/settings', icon: '⚙️', label: 'Settings' },
+            ].map((action) => (
+              <a
+                key={action.href}
+                href={action.href}
+                className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-surface-light/50 border border-border/50 hover:border-accent/20 hover:bg-surface-lighter/40 transition-all duration-300"
+              >
+                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{action.icon}</span>
+                <span className="text-text-secondary text-sm font-medium group-hover:text-text-primary transition-colors">{action.label}</span>
+              </a>
+            ))}
           </div>
         </div>
       </div>
     </AdminLayout>
   )
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(amount)
 }

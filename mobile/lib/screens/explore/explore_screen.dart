@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/studio_provider.dart';
-import '../../models/studio_model.dart';
 import '../../widgets/studio_card.dart';
+import '../studio/studio_detail_screen.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -15,18 +14,16 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearching = false;
   String? _selectedCity;
   String? _selectedProvince;
   double? _minRating;
   double? _maxPrice;
   double? _minPrice;
   String? _sortBy;
-  
-  // Available filter options
+
   final List<String> _cities = ['Jakarta', 'Bandung', 'Surabaya', 'Yogyakarta', 'Semarang', 'Medan'];
   final List<String> _provinces = ['DKI Jakarta', 'Jawa Barat', 'Jawa Timur', 'DI Yogyakarta', 'Jawa Tengah', 'Sumatera Utara'];
-  final List<String> _sortOptions = [
+  final List<Map<String, String>> _sortOptions = [
     {'value': 'rating', 'label': 'Rating Tertinggi'},
     {'value': 'price_low', 'label': 'Harga Terendah'},
     {'value': 'price_high', 'label': 'Harga Tertinggi'},
@@ -53,36 +50,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   void _applyFilters() {
     final studioProvider = context.read<StudioProvider>();
-    
-    if (_selectedCity != null) {
-      studioProvider.filterByCity(_selectedCity);
-    } else {
-      studioProvider.filterByCity(null);
-    }
-    
-    if (_selectedProvince != null) {
-      studioProvider.filterByProvince(_selectedProvince);
-    } else {
-      studioProvider.filterByProvince(null);
-    }
-    
-    if (_minRating != null) {
-      studioProvider.filterByRating(_minRating);
-    } else {
-      studioProvider.filterByRating(null);
-    }
-    
-    if (_minPrice != null || _maxPrice != null) {
-      studioProvider.filterByPrice(min: _minPrice, max: _maxPrice);
-    } else {
-      studioProvider.filterByPrice(min: null, max: null);
-    }
-    
-    if (_sortBy != null) {
-      studioProvider.sortStudios(_sortBy);
-    } else {
-      studioProvider.sortStudios(null);
-    }
+    studioProvider.filterByCity(_selectedCity);
+    studioProvider.filterByProvince(_selectedProvince);
+    studioProvider.filterByRating(_minRating);
+    studioProvider.filterByPrice(min: _minPrice, max: _maxPrice);
+    studioProvider.sortStudios(_sortBy);
   }
 
   void _clearFilters() {
@@ -94,9 +66,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       _minPrice = null;
       _sortBy = null;
     });
-    
-    final studioProvider = context.read<StudioProvider>();
-    studioProvider.clearFilters();
+    context.read<StudioProvider>().clearFilters();
   }
 
   void _showFilterBottomSheet() {
@@ -134,49 +104,50 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
+  bool get _hasActiveFilters {
+    return _selectedCity != null || _selectedProvince != null || _minRating != null || _maxPrice != null || _minPrice != null || _sortBy != null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Column(
         children: [
-          // Search and Filter Bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Explore Studios',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                 ),
                 const SizedBox(height: 16),
-                
-                // Search Bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.border),
+                    color: AppTheme.surfaceLight.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.border, width: 0.5),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.search, color: AppTheme.textMuted),
+                      const Icon(Icons.search, color: AppTheme.textMuted, size: 20),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
+                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
                           decoration: const InputDecoration(
                             hintText: 'Search by name or location...',
+                            hintStyle: TextStyle(color: AppTheme.textMuted),
                             border: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                           ),
                           onChanged: (value) {
-                            // Debounce search
                             Future.delayed(const Duration(milliseconds: 500), () {
                               if (value == _searchController.text) {
-                                final studioProvider = context.read<StudioProvider>();
-                                studioProvider.searchStudios(value);
+                                context.read<StudioProvider>().searchStudios(value);
                               }
                             });
                           },
@@ -184,157 +155,101 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       ),
                       if (_searchController.text.isNotEmpty)
                         IconButton(
-                          icon: const Icon(Icons.clear, color: AppTheme.textMuted),
+                          icon: const Icon(Icons.clear, color: AppTheme.textMuted, size: 18),
                           onPressed: () {
                             _searchController.clear();
-                            final studioProvider = context.read<StudioProvider>();
-                            studioProvider.searchStudios('');
+                            context.read<StudioProvider>().searchStudios('');
                           },
                         ),
                       IconButton(
-                        icon: const Icon(Icons.filter_list, color: AppTheme.textSecondary),
+                        icon: const Icon(Icons.filter_list, color: AppTheme.textSecondary, size: 20),
                         onPressed: _showFilterBottomSheet,
                       ),
                     ],
                   ),
                 ),
-                
-                // Active Filters
                 if (_hasActiveFilters)
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: 10),
                     child: Wrap(
                       spacing: 8,
-                      runSpacing: 4,
+                      runSpacing: 6,
                       children: [
                         if (_selectedCity != null)
-                          _buildFilterChip(
-                            'Kota: $_selectedCity',
-                            () => setState(() {
-                              _selectedCity = null;
-                              _applyFilters();
-                            }),
-                          ),
+                          _buildFilterChip('Kota: $_selectedCity', () => setState(() { _selectedCity = null; _applyFilters(); })),
                         if (_selectedProvince != null)
-                          _buildFilterChip(
-                            'Provinsi: $_selectedProvince',
-                            () => setState(() {
-                              _selectedProvince = null;
-                              _applyFilters();
-                            }),
-                          ),
+                          _buildFilterChip('Provinsi: $_selectedProvince', () => setState(() { _selectedProvince = null; _applyFilters(); })),
                         if (_minRating != null)
-                          _buildFilterChip(
-                            'Rating: ${_minRating}+',
-                            () => setState(() {
-                              _minRating = null;
-                              _applyFilters();
-                            }),
-                          ),
+                          _buildFilterChip('Rating: ${_minRating}+', () => setState(() { _minRating = null; _applyFilters(); })),
                         if (_minPrice != null || _maxPrice != null)
                           _buildFilterChip(
                             'Harga: ${_minPrice != null ? "Rp${(_minPrice! / 1000).toInt()}K" : "0"} - ${_maxPrice != null ? "Rp${(_maxPrice! / 1000).toInt()}K" : "∞"}',
-                            () => setState(() {
-                              _minPrice = null;
-                              _maxPrice = null;
-                              _applyFilters();
-                            }),
+                            () => setState(() { _minPrice = null; _maxPrice = null; _applyFilters(); }),
                           ),
                         if (_sortBy != null)
                           _buildFilterChip(
                             'Urutkan: ${_sortOptions.firstWhere((s) => s['value'] == _sortBy)['label']}',
-                            () => setState(() {
-                              _sortBy = null;
-                              _applyFilters();
-                            }),
+                            () => setState(() { _sortBy = null; _applyFilters(); }),
                           ),
-                        if (_hasActiveFilters)
-                          TextButton(
-                            onPressed: _clearFilters,
-                            child: const Text(
-                              'Hapus Semua',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          ),
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: const Text('Hapus Semua', style: TextStyle(color: AppTheme.danger, fontSize: 12)),
+                        ),
                       ],
                     ),
                   ),
               ],
             ),
           ),
-          
-          // Studio List
           Expanded(
             child: Consumer<StudioProvider>(
               builder: (context, studioProvider, child) {
                 if (studioProvider.isLoading && studioProvider.studios.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: AppTheme.accent));
                 }
-                
                 if (studioProvider.error != null) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                        const Icon(Icons.error_outline, size: 56, color: AppTheme.danger),
                         const SizedBox(height: 16),
-                        Text(
-                          'Terjadi kesalahan',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
+                        Text('Terjadi kesalahan', style: Theme.of(context).textTheme.headlineSmall),
                         const SizedBox(height: 8),
-                        Text(studioProvider.error!),
+                        Text(studioProvider.error!, style: const TextStyle(color: AppTheme.textMuted)),
                         const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadStudios,
-                          child: const Text('Coba Lagi'),
-                        ),
+                        ElevatedButton(onPressed: _loadStudios, child: const Text('Coba Lagi')),
                       ],
                     ),
                   );
                 }
-                
                 if (studioProvider.studios.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.explore, size: 64, color: AppTheme.textMuted),
+                        const Icon(Icons.explore, size: 56, color: AppTheme.textMuted),
                         const SizedBox(height: 16),
-                        Text(
-                          'Tidak ada studio ditemukan',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Coba ubah filter atau kata kunci pencarian',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 14,
-                          ),
-                        ),
+                        const Text('Tidak ada studio ditemukan', style: TextStyle(color: AppTheme.textMuted, fontSize: 16)),
+                        const SizedBox(height: 6),
+                        const Text('Coba ubah filter atau kata kunci', style: TextStyle(color: AppTheme.textMuted, fontSize: 13)),
                       ],
                     ),
                   );
                 }
-                
                 return RefreshIndicator(
                   onRefresh: _loadStudios,
+                  color: AppTheme.accent,
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: studioProvider.studios.length + (studioProvider.hasMore ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == studioProvider.studios.length) {
-                        // Load more
                         return const Padding(
                           padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator()),
+                          child: Center(child: CircularProgressIndicator(color: AppTheme.accent)),
                         );
                       }
-                      
                       final studio = studioProvider.studios[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -342,9 +257,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           studio: studio,
                           onTap: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => StudioDetailScreen(studioSlug: studio.slug),
-                              ),
+                              MaterialPageRoute(builder: (_) => StudioDetailScreen(studioSlug: studio.slug)),
                             );
                           },
                         ),
@@ -360,28 +273,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  bool get _hasActiveFilters {
-    return _selectedCity != null ||
-        _selectedProvince != null ||
-        _minRating != null ||
-        _maxPrice != null ||
-        _minPrice != null ||
-        _sortBy != null;
-  }
-
   Widget _buildFilterChip(String label, VoidCallback onDelete) {
     return Chip(
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 12),
-      ),
-      deleteIcon: const Icon(Icons.close, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textPrimary)),
+      deleteIcon: const Icon(Icons.close, size: 14, color: AppTheme.textMuted),
       onDeleted: onDelete,
-      backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-      labelStyle: TextStyle(color: AppTheme.primaryColor),
+      backgroundColor: AppTheme.surfaceLighter,
+      side: const BorderSide(color: AppTheme.border, width: 0.5),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
     );
   }
 }
+
+// ═══════════════════════════════════════════════
+// Filter Bottom Sheet — Dark Luxury Theme
+// ═══════════════════════════════════════════════
 
 class _FilterBottomSheet extends StatefulWidget {
   final String? selectedCity;
@@ -438,8 +344,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: AppTheme.surfaceLight,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -449,14 +355,14 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppTheme.borderLight,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Header
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -465,29 +371,30 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
-                TextButton(
-                  onPressed: widget.onClear,
+                GestureDetector(
+                  onTap: widget.onClear,
                   child: const Text(
                     'Hapus Semua',
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: AppTheme.danger, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           // Filter Options
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // City Filter
+                  // City
                   _buildSectionTitle('Kota'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -497,23 +404,25 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         label: Text(city),
                         selected: isSelected,
                         onSelected: (selected) {
-                          setState(() {
-                            _tempCity = selected ? city : null;
-                          });
+                          setState(() => _tempCity = selected ? city : null);
                         },
-                        selectedColor: AppTheme.primaryColor,
+                        selectedColor: AppTheme.accent,
+                        backgroundColor: AppTheme.surfaceLighter,
+                        side: BorderSide(color: isSelected ? AppTheme.accent : AppTheme.border, width: 0.5),
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       );
                     }).toList(),
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Province Filter
+
+                  const SizedBox(height: 24),
+
+                  // Province
                   _buildSectionTitle('Provinsi'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -523,88 +432,126 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         label: Text(province),
                         selected: isSelected,
                         onSelected: (selected) {
-                          setState(() {
-                            _tempProvince = selected ? province : null;
-                          });
+                          setState(() => _tempProvince = selected ? province : null);
                         },
-                        selectedColor: AppTheme.primaryColor,
+                        selectedColor: AppTheme.accent,
+                        backgroundColor: AppTheme.surfaceLighter,
+                        side: BorderSide(color: isSelected ? AppTheme.accent : AppTheme.border, width: 0.5),
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       );
                     }).toList(),
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Rating Filter
+
+                  const SizedBox(height: 24),
+
+                  // Rating
                   _buildSectionTitle('Rating Minimum'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
-                        child: Slider(
-                          value: _tempMinRating ?? 0,
-                          min: 0,
-                          max: 5,
-                          divisions: 10,
-                          label: _tempMinRating?.toStringAsFixed(1) ?? 'Semua',
-                          onChanged: (value) {
-                            setState(() {
-                              _tempMinRating = value > 0 ? value : null;
-                            });
-                          },
+                        child: SliderTheme(
+                          data: SliderThemeData(
+                            activeTrackColor: AppTheme.accent,
+                            inactiveTrackColor: AppTheme.surfaceLighter,
+                            thumbColor: AppTheme.accent,
+                            overlayColor: AppTheme.goldGlow,
+                          ),
+                          child: Slider(
+                            value: _tempMinRating ?? 0,
+                            min: 0,
+                            max: 5,
+                            divisions: 10,
+                            label: _tempMinRating?.toStringAsFixed(1) ?? 'Semua',
+                            onChanged: (value) {
+                              setState(() => _tempMinRating = value > 0 ? value : null);
+                            },
+                          ),
                         ),
                       ),
                       Text(
                         _tempMinRating != null ? '${_tempMinRating!.toStringAsFixed(1)}+' : 'Semua',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Price Range Filter
+
+                  const SizedBox(height: 24),
+
+                  // Price Range
                   _buildSectionTitle('Range Harga (per jam)'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(
+                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                          decoration: InputDecoration(
                             labelText: 'Minimum',
+                            labelStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                             prefixText: 'Rp ',
-                            border: OutlineInputBorder(),
+                            prefixStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                            filled: true,
+                            fillColor: AppTheme.surfaceLighter.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.accent, width: 1.5),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           ),
                           keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _tempMinPrice = double.tryParse(value);
-                          },
+                          onChanged: (value) => _tempMinPrice = double.tryParse(value),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
-                          decoration: const InputDecoration(
+                          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+                          decoration: InputDecoration(
                             labelText: 'Maksimum',
+                            labelStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                             prefixText: 'Rp ',
-                            border: OutlineInputBorder(),
+                            prefixStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+                            filled: true,
+                            fillColor: AppTheme.surfaceLighter.withOpacity(0.5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.border),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.border),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppTheme.accent, width: 1.5),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                           ),
                           keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _tempMaxPrice = double.tryParse(value);
-                          },
+                          onChanged: (value) => _tempMaxPrice = double.tryParse(value),
                         ),
                       ),
                     ],
                   ),
-                  
-                  const SizedBox(height: 20),
-                  
+
+                  const SizedBox(height: 24),
+
                   // Sort By
                   _buildSectionTitle('Urutkan Berdasarkan'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -614,13 +561,15 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                         label: Text(option['label']!),
                         selected: isSelected,
                         onSelected: (selected) {
-                          setState(() {
-                            _tempSortBy = selected ? option['value'] : null;
-                          });
+                          setState(() => _tempSortBy = selected ? option['value'] : null);
                         },
-                        selectedColor: AppTheme.primaryColor,
+                        selectedColor: AppTheme.accent,
+                        backgroundColor: AppTheme.surfaceLighter,
+                        side: BorderSide(color: isSelected ? AppTheme.accent : AppTheme.border, width: 0.5),
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
+                          color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       );
                     }).toList(),
@@ -629,12 +578,13 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               ),
             ),
           ),
-          
+
           // Apply Button
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: SizedBox(
               width: double.infinity,
+              height: 52,
               child: ElevatedButton(
                 onPressed: () {
                   widget.onApply({
@@ -647,13 +597,14 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
                   });
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: AppTheme.primary,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: const Text(
                   'Terapkan Filter',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -667,8 +618,10 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
+        color: AppTheme.textPrimary,
+        letterSpacing: 0.02,
       ),
     );
   }

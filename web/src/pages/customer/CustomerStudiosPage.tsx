@@ -21,9 +21,7 @@ export default function CustomerStudiosPage() {
   const [search, setSearch] = useState('')
   const [city, setCity] = useState('')
 
-  useEffect(() => {
-    fetchStudios()
-  }, [search, city])
+  useEffect(() => { fetchStudios() }, [search, city])
 
   const fetchStudios = async () => {
     try {
@@ -43,64 +41,69 @@ export default function CustomerStudiosPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Browse Studios</h1>
-          <p className="text-text-secondary">Find and book music studios</p>
+        <div className="animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Browse Studios</h1>
+          <p className="text-text-secondary mt-1 text-sm">Find and book music studios</p>
         </div>
 
         {/* Search */}
-        <div className="flex gap-3">
+        <div className="flex gap-3 animate-fade-in-up stagger-1">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search studios..."
-            className="flex-1 bg-surface-light border border-border rounded-lg px-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
+            className="input-luxury flex-1 text-sm"
           />
           <input
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Filter by city..."
-            className="w-48 bg-surface-light border border-border rounded-lg px-4 py-2.5 text-text-primary placeholder-text-muted focus:outline-none focus:border-accent"
+            className="input-luxury w-48 text-sm"
           />
         </div>
 
-        {/* Studios Grid */}
+        {/* Studios */}
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-accent animate-pulse">Loading studios...</div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+              <p className="text-text-muted text-sm">Loading studios...</p>
+            </div>
           </div>
         ) : studios.length === 0 ? (
-          <div className="bg-surface border border-border rounded-xl p-12 text-center">
+          <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">🔍</span>
             <p className="text-text-muted text-lg">No studios found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {studios.map((studio) => (
-              <div key={studio.id} className="bg-surface border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="h-48 bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
-                  <span className="text-5xl">🎵</span>
+            {studios.map((studio, i) => (
+              <div key={studio.id} className={`card-luxury overflow-hidden group animate-fade-in-up stagger-${Math.min(i + 1, 8)}`}>
+                {/* Image placeholder */}
+                <div className="h-44 bg-gradient-to-br from-accent/10 via-accent/[0.03] to-transparent flex items-center justify-center relative overflow-hidden">
+                  <span className="text-5xl opacity-60 group-hover:scale-110 transition-transform duration-500">🎵</span>
+                  {studio.is_verified && (
+                    <div className="absolute top-3 right-3 px-2 py-0.5 bg-accent/15 border border-accent/20 rounded-full text-accent text-[0.6rem] font-medium">
+                      ✓ Verified
+                    </div>
+                  )}
                 </div>
                 <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-text-primary font-semibold">{studio.name}</h3>
-                    {studio.is_verified && (
-                      <span className="text-accent text-sm" title="Verified">✓</span>
-                    )}
-                  </div>
-                  <p className="text-text-muted text-sm mb-3">📍 {studio.city}, {studio.province}</p>
+                  <h3 className="text-text-primary font-semibold mb-1">{studio.name}</h3>
+                  <p className="text-text-muted text-xs mb-3">📍 {studio.city}, {studio.province}</p>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <span className="text-warning">⭐</span>
-                      <span className="text-text-primary text-sm">{studio.average_rating}</span>
-                      <span className="text-text-muted text-sm">({studio.total_reviews})</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-warning text-xs">★</span>
+                      <span className="text-text-primary text-sm font-medium">{studio.average_rating}</span>
+                      <span className="text-text-muted text-xs">({studio.total_reviews})</span>
                     </div>
                     <a
                       href={`http://localhost:5173/studios/${studio.slug}`}
                       target="_blank"
-                      className="px-3 py-1.5 bg-accent text-primary text-sm rounded-lg hover:bg-accent-hover transition-colors"
+                      rel="noopener noreferrer"
+                      className="btn-gold text-xs py-1.5 px-4"
                     >
                       View
                     </a>

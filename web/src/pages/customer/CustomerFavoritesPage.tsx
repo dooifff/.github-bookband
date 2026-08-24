@@ -16,9 +16,7 @@ export default function CustomerFavoritesPage() {
   const [favorites, setFavorites] = useState<Favorite[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchFavorites()
-  }, [])
+  useEffect(() => { fetchFavorites() }, [])
 
   const fetchFavorites = async () => {
     try {
@@ -43,56 +41,56 @@ export default function CustomerFavoritesPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">My Favorites</h1>
-          <p className="text-text-secondary">Studios you've saved</p>
+        <div className="animate-fade-in-up">
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">My Favorites</h1>
+          <p className="text-text-secondary mt-1 text-sm">Studios you've saved</p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-accent animate-pulse">Loading favorites...</div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+              <p className="text-text-muted text-sm">Loading favorites...</p>
+            </div>
           </div>
         ) : favorites.length === 0 ? (
-          <div className="bg-surface border border-border rounded-xl p-12 text-center">
+          <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">❤️</span>
             <p className="text-text-muted text-lg">No favorites yet</p>
-            <a href="/customer/studios" className="text-accent hover:underline mt-2 inline-block">
-              Browse studios to add favorites
+            <a href="/customer/studios" className="text-accent text-sm hover:text-accent-hover mt-2 inline-block transition-colors">
+              Browse studios to add favorites →
             </a>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {favorites.map((fav) => (
-              <div key={fav.id} className="bg-surface border border-border rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
-                    <span className="text-xl">🎵</span>
+            {favorites.map((fav, i) => (
+              <div key={fav.id} className={`card-luxury p-5 animate-fade-in-up stagger-${Math.min(i + 1, 8)}`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 bg-gradient-to-br from-accent/15 to-accent/5 rounded-xl flex items-center justify-center border border-accent/10">
+                    <span className="text-lg">🎵</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-text-primary font-semibold">{fav.name}</h3>
-                    <p className="text-text-muted text-sm">📍 {fav.city}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-text-primary font-semibold truncate">{fav.name}</h3>
+                    <p className="text-text-muted text-xs">📍 {fav.city}</p>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <span className="text-warning">⭐</span>
-                    <span className="text-text-primary text-sm">{fav.average_rating}</span>
-                    <span className="text-text-muted text-sm">({fav.total_reviews})</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-warning text-xs">★</span>
+                    <span className="text-text-primary text-sm font-medium">{fav.average_rating}</span>
+                    <span className="text-text-muted text-xs">({fav.total_reviews})</span>
                   </div>
                   <div className="flex gap-2">
                     <a
                       href={`http://localhost:5173/studios/${fav.slug}`}
                       target="_blank"
-                      className="px-3 py-1 bg-accent text-primary text-sm rounded hover:bg-accent-hover transition-colors"
-                    >
-                      View
-                    </a>
+                      rel="noopener noreferrer"
+                      className="btn-gold text-xs py-1 px-3"
+                    >View</a>
                     <button
                       onClick={() => handleRemove(fav.id)}
-                      className="px-3 py-1 bg-red-500/10 text-red-500 text-sm rounded hover:bg-red-500/20 transition-colors"
-                    >
-                      Remove
-                    </button>
+                      className="px-3 py-1 text-xs font-medium bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger/15 transition-colors"
+                    >Remove</button>
                   </div>
                 </div>
               </div>

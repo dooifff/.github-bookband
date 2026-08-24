@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(
-            top: BorderSide(color: AppTheme.border),
+            top: BorderSide(color: AppTheme.border, width: 0.5),
           ),
         ),
         child: BottomNavigationBar(
@@ -83,7 +83,7 @@ class _HomeTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -96,79 +96,84 @@ class _HomeTab extends StatelessWidget {
                   children: [
                     Text(
                       'Hello, User! 👋',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.3,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Find your perfect studio',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                   ],
                 ),
-                GestureDetector(
-                  onTap: () {
-                    // Navigate to notifications - TODO: implement notifications screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notifikasi coming soon')),
-                    );
-                  },
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceLight,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      color: AppTheme.textSecondary,
-                    ),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLight,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.border, width: 0.5),
+                  ),
+                  child: const Icon(
+                    Icons.notifications_outlined,
+                    color: AppTheme.textSecondary,
+                    size: 22,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            
+
             // Search Bar
             GestureDetector(
               onTap: () {
-                // Navigate to explore screen
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const ExploreScreen()),
                 );
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border),
+                  color: AppTheme.surfaceLight.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppTheme.border, width: 0.5),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.search, color: AppTheme.textMuted),
+                    const Icon(Icons.search, color: AppTheme.textMuted, size: 20),
                     const SizedBox(width: 12),
                     Text(
                       'Search studios...',
-                      style: TextStyle(color: AppTheme.textMuted),
+                      style: TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 14,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 28),
+
             // Categories
-            Text(
+            const Text(
               'Categories',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             SizedBox(
-              height: 80,
+              height: 44,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: [
+                children: const [
                   _CategoryChip(icon: Icons.mic, label: 'Recording'),
                   _CategoryChip(icon: Icons.piano, label: 'Practice'),
                   _CategoryChip(icon: Icons.headphones, label: 'Mixing'),
@@ -176,34 +181,40 @@ class _HomeTab extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            
+            const SizedBox(height: 28),
+
             // Popular Studios
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Popular Studios',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Switch to Explore tab
-                    final homeState = context.findAncestorStateOfType<State>();
-                    if (homeState != null && homeState.mounted) {
-                      // Navigate to explore screen
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ExploreScreen()),
-                      );
-                    }
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ExploreScreen()),
+                    );
                   },
-                  child: const Text('See All'),
+                  child: const Text(
+                    'See All →',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.accent,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            
-            // Studio Cards (Placeholder)
+            const SizedBox(height: 14),
+
+            // Studio Cards
             _StudioCard(
               name: 'Studio Melody',
               location: 'Jakarta Selatan',
@@ -234,24 +245,31 @@ class _HomeTab extends StatelessWidget {
 class _CategoryChip extends StatelessWidget {
   final IconData icon;
   final String label;
-  
+
   const _CategoryChip({required this.icon, required this.label});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      margin: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceLight,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.border),
+        color: AppTheme.surfaceLight.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border, width: 0.5),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.accent, size: 20),
+          Icon(icon, color: AppTheme.accent, size: 18),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppTheme.textPrimary)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -264,7 +282,7 @@ class _StudioCard extends StatelessWidget {
   final double rating;
   final String price;
   final String? slug;
-  
+
   const _StudioCard({
     required this.name,
     required this.location,
@@ -272,7 +290,7 @@ class _StudioCard extends StatelessWidget {
     required this.price,
     this.slug,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -287,73 +305,91 @@ class _StudioCard extends StatelessWidget {
       },
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.border),
-        ),
+        decoration: AppTheme.cardDecoration,
         child: Row(
-        children: [
-          // Studio Image Placeholder
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceLight,
-              borderRadius: BorderRadius.circular(8),
+          children: [
+            // Studio Image Placeholder
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.accent.withOpacity(0.12),
+                    AppTheme.accent.withOpacity(0.04),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.accent.withOpacity(0.08)),
+              ),
+              child: const Icon(
+                Icons.music_note,
+                color: AppTheme.accent,
+                size: 28,
+              ),
             ),
-            child: const Icon(
-              Icons.music_note,
-              color: AppTheme.accent,
-              size: 32,
-            ),
-          ),
-          const SizedBox(width: 16),
-          
-          // Studio Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+            const SizedBox(width: 16),
+
+            // Studio Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textMuted),
-                    const SizedBox(width: 4),
-                    Text(location, style: TextStyle(fontSize: 12, color: AppTheme.textMuted)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, size: 14, color: AppTheme.warning),
-                    const SizedBox(width: 4),
-                    Text(rating.toString(), style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textMuted),
+                      const SizedBox(width: 3),
+                      Text(
+                        location,
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, size: 13, color: AppTheme.warning),
+                      const SizedBox(width: 3),
+                      Text(
+                        rating.toString(),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          
-          // Price
-          Text(
-            price,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.accent,
+
+            // Price
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppTheme.accent.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                price,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.accent,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
     );
   }
 }

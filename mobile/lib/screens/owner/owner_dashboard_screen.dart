@@ -83,11 +83,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.primary,
       appBar: AppBar(
         title: const Text('Owner Dashboard'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
         actions: [
           IconButton(
@@ -127,7 +127,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const Icon(Icons.error_outline, size: 56, color: AppTheme.danger),
           const SizedBox(height: 16),
           Text(
             'Terjadi kesalahan',
@@ -148,17 +148,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   Widget _buildWelcomeSection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppTheme.primaryColor,
-            AppTheme.primaryColor.withOpacity(0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
+      padding: const EdgeInsets.all(20),        decoration: AppTheme.cardDecoration,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,15 +158,15 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppTheme.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Berikut ringkasan studio Anda hari ini',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
+              color: AppTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -211,26 +201,27 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: AppTheme.surfaceLighter,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border, width: 0.5),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white, size: 20),
+            Icon(icon, color: AppTheme.accent, size: 20),
             const SizedBox(height: 4),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
               ),
             ),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.white.withOpacity(0.9),
+                color: AppTheme.textSecondary,
               ),
             ),
           ],
@@ -315,11 +306,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border, width: 0.5),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -355,7 +345,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: AppTheme.textMuted,
             ),
           ),
         ],
@@ -396,7 +386,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.event_busy, size: 48, color: Colors.grey[400]),
+                  Icon(Icons.event_busy, size: 48, color: AppTheme.textMuted),
                   const SizedBox(height: 12),
                   Text(
                     'Tidak ada booking hari ini',
@@ -514,7 +504,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: AppTheme.primaryColor),
+            Icon(icon, size: 32, color: AppTheme.accent),
             const SizedBox(height: 8),
             Text(
               title,

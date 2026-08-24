@@ -44,11 +44,11 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.primary,
       appBar: AppBar(
         title: const Text('Blokir Jadwal Massal'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -75,11 +75,9 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+        border: Border.all(color: AppTheme.border, width: 0.5),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -91,12 +89,12 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               Icons.meeting_room,
-              color: AppTheme.primaryColor,
+              color: AppTheme.accent,
               size: 24,
             ),
           ),
@@ -116,7 +114,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                   'Studio ID: ${widget.studioId}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textMuted,
                   ),
                 ),
               ],
@@ -176,15 +174,13 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+        decoration: BoxDecoration(                  color: isSelected ? AppTheme.accent : AppTheme.surfaceLighter,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           children: [
             Icon(
-              icon,
-              color: isSelected ? Colors.white : Colors.grey,
+              icon,                    color: isSelected ? AppTheme.primary : AppTheme.textMuted,
               size: 20,
             ),
             const SizedBox(height: 4),
@@ -192,7 +188,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
               label,
               style: TextStyle(
                 fontSize: 11,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                color: isSelected ? AppTheme.primary : AppTheme.textMuted,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               textAlign: TextAlign.center,
@@ -376,10 +372,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                     horizontal: 16,
                     vertical: 10,
                   ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.primaryColor
-                        : Colors.grey[100],
+                  decoration: BoxDecoration(                        color: isSelected ? AppTheme.accent : AppTheme.surfaceLighter,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
@@ -390,7 +383,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                   child: Text(
                     _dayNames[index].substring(0, 3),
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.grey[700],
+                      color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -453,7 +446,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
               ),
             ),
             const SizedBox(height: 4),
@@ -462,7 +455,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                   ? DateFormat('dd MMM yyyy').format(value)
                   : 'Pilih tanggal',
               style: TextStyle(
-                color: value != null ? Colors.black : Colors.grey[400],
+                color: value != null ? AppTheme.textPrimary : AppTheme.textMuted,
               ),
             ),
           ],
@@ -499,7 +492,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
               label,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
               ),
             ),
             const SizedBox(height: 4),
@@ -508,7 +501,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                   ? '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}'
                   : 'Pilih jam',
               style: TextStyle(
-                color: value != null ? Colors.black : Colors.grey[400],
+                color: value != null ? AppTheme.textPrimary : AppTheme.textMuted,
               ),
             ),
           ],
@@ -573,8 +566,8 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
           child: ElevatedButton(
             onPressed: _isLoading ? null : _submitSchedule,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.accent,
+              foregroundColor: AppTheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
             child: _isLoading
@@ -583,7 +576,7 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
                     width: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: AppTheme.primary,
                     ),
                   )
                 : const Text('Blokir Jadwal'),

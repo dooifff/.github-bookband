@@ -91,7 +91,7 @@ class BookingCard extends StatelessWidget {
                   TextButton(
                     onPressed: onCancel,
                     style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.errorColor,
+                      foregroundColor: AppTheme.danger,
                     ),
                     child: const Text('Batalkan'),
                   ),

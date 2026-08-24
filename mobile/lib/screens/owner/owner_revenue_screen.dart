@@ -93,11 +93,11 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.primary,
       appBar: AppBar(
         title: const Text('Pendapatan'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
         actions: [
           PopupMenuButton<String>(
@@ -164,7 +164,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const Icon(Icons.error_outline, size: 56, color: AppTheme.danger),
           const SizedBox(height: 16),
           Text(
             'Terjadi kesalahan',
@@ -285,11 +285,9 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+        border: Border.all(color: AppTheme.border, width: 0.5),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -320,7 +318,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
             title,
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey[600],
+              color: AppTheme.textMuted,
             ),
           ),
         ],
@@ -332,11 +330,9 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+        border: Border.all(color: AppTheme.border, width: 0.5),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -391,7 +387,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                               Container(
                                 height: height,
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryColor,
+                                  color: AppTheme.accent,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                               ),
@@ -456,7 +452,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: AppTheme.accent.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -465,7 +461,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
+                              color: AppTheme.accent,
                             ),
                           ),
                         ),

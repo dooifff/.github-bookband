@@ -101,7 +101,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Booking berhasil dikonfirmasi'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.success,
           ),
         );
         _loadBookings();
@@ -112,7 +112,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal mengkonfirmasi: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.danger,
         ),
       );
     }
@@ -127,7 +127,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Booking berhasil diselesaikan'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.success,
           ),
         );
         _loadBookings();
@@ -138,7 +138,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal menyelesaikan: ${e.toString()}'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.danger,
         ),
       );
     }
@@ -154,17 +154,17 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.primary,
       appBar: AppBar(
         title: const Text('Kelola Booking'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: AppTheme.accent,
+          labelColor: AppTheme.accent,
+          unselectedLabelColor: AppTheme.textMuted,
           tabs: [
             Tab(text: 'Semua (${_bookings.length})'),
             Tab(text: 'Pending (${_bookings.where((b) => b['status'] == 'pending').length})'),
@@ -220,7 +220,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const Icon(Icons.error_outline, size: 56, color: AppTheme.danger),
           const SizedBox(height: 16),
           Text(
             'Terjadi kesalahan',
@@ -243,7 +243,7 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+          Icon(Icons.event_busy, size: 56, color: AppTheme.textMuted),
           const SizedBox(height: 16),
           Text(
             'Tidak ada booking',
@@ -300,8 +300,8 @@ class _BookingDetailSheet extends StatelessWidget {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        color: AppTheme.surfaceLight,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
@@ -311,7 +311,7 @@ class _BookingDetailSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppTheme.borderLight,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -377,7 +377,7 @@ class _BookingDetailSheet extends StatelessWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
+                        side: const BorderSide(color: AppTheme.danger),
                       ),
                       child: const Text('Tolak'),
                     ),
@@ -387,7 +387,7 @@ class _BookingDetailSheet extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: onConfirm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryColor,
+                        backgroundColor: AppTheme.accent,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Konfirmasi'),
@@ -404,7 +404,7 @@ class _BookingDetailSheet extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onComplete,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppTheme.success,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -428,7 +428,7 @@ class _BookingDetailSheet extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
                 fontSize: 14,
               ),
             ),

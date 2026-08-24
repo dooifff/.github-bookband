@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/api_service.dart';
@@ -34,73 +33,58 @@ class _BookingsScreenState extends State<BookingsScreen> with SingleTickerProvid
   }
 
   Future<void> _loadBookings() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
+    setState(() { _isLoading = true; _error = null; });
     try {
       final apiService = ApiService();
       final response = await apiService.get(ApiConstants.bookings);
-      
       if (response['success'] == true) {
         final allBookings = List<Map<String, dynamic>>.from(response['data'] ?? []);
-        
         final now = DateTime.now();
         setState(() {
           _upcomingBookings = allBookings.where((b) {
             final date = DateTime.tryParse(b['date'] ?? '');
-            return date != null && date.isAfter(now) && 
-                   (b['status'] == 'pending' || b['status'] == 'confirmed' || b['status'] == 'paid');
+            return date != null && date.isAfter(now) && (b['status'] == 'pending' || b['status'] == 'confirmed' || b['status'] == 'paid');
           }).toList();
-          
           _pastBookings = allBookings.where((b) {
             final date = DateTime.tryParse(b['date'] ?? '');
-            return date != null && date.isBefore(now) || 
-                   b['status'] == 'completed' || b['status'] == 'cancelled';
+            return date != null && date.isBefore(now) || b['status'] == 'completed' || b['status'] == 'cancelled';
           }).toList();
-          
           _isLoading = false;
         });
       } else {
         throw Exception(response['message'] ?? 'Failed to load bookings');
       }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+      setState(() { _error = e.toString(); _isLoading = false; });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: AppTheme.primary,
       appBar: AppBar(
         title: const Text('Booking Saya'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: AppTheme.surface,
+        foregroundColor: AppTheme.textPrimary,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          indicatorColor: AppTheme.accent,
+          labelColor: AppTheme.accent,
+          unselectedLabelColor: AppTheme.textMuted,
+          indicatorWeight: 2,
           tabs: [
             Tab(text: 'Mendatang (${_upcomingBookings.length})'),
             Tab(text: 'Riwayat (${_pastBookings.length})'),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadBookings,
-          ),
+          IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: _loadBookings),
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.accent))
           : _error != null
               ? _buildErrorWidget()
               : TabBarView(
@@ -118,19 +102,13 @@ class _BookingsScreenState extends State<BookingsScreen> with SingleTickerProvid
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
+          const Icon(Icons.error_outline, size: 56, color: AppTheme.danger),
           const SizedBox(height: 16),
-          Text(
-            'Terjadi kesalahan',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          const Text('Terjadi kesalahan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           const SizedBox(height: 8),
-          Text(_error ?? 'Unknown error'),
+          Text(_error ?? '', style: const TextStyle(color: AppTheme.textMuted, fontSize: 13)),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadBookings,
-            child: const Text('Coba Lagi'),
-          ),
+          ElevatedButton(onPressed: _loadBookings, child: const Text('Coba Lagi')),
         ],
       ),
     );
@@ -142,24 +120,16 @@ class _BookingsScreenState extends State<BookingsScreen> with SingleTickerProvid
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isUpcoming ? Icons.calendar_today : Icons.history,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(isUpcoming ? Icons.calendar_today : Icons.history, size: 56, color: AppTheme.textMuted),
             const SizedBox(height: 16),
             Text(
               isUpcoming ? 'Tidak ada booking mendatang' : 'Belum ada riwayat booking',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[600],
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               isUpcoming ? 'Booking akan muncul di sini' : 'Riwayat booking akan muncul di sini',
-              style: TextStyle(color: Colors.grey[500]),
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
             ),
           ],
         ),
@@ -168,6 +138,7 @@ class _BookingsScreenState extends State<BookingsScreen> with SingleTickerProvid
 
     return RefreshIndicator(
       onRefresh: _loadBookings,
+      color: AppTheme.accent,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: bookings.length,

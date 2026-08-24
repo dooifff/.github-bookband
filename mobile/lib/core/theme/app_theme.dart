@@ -39,16 +39,14 @@ class AppTheme {
   static const Color goldGlowStrong = Color(0x40D4AF37);
 
   // ═══════════════════════════════════════════════
-  // Backward-compatible aliases (used by other files)
+  // Backward-compatible aliases
   // ═══════════════════════════════════════════════
-  /// Alias for accent — used as primary action color throughout the app
   static const Color primaryColor = accent;
-  /// Alias for surface — used as card background
   static const Color cardColor = surface;
-  /// Alias for border — used for card/list borders
   static const Color borderColor = border;
-  /// Alias for surfaceLighter — used for secondary surfaces
   static const Color dividerColor = borderLight;
+  /// Alias for primary — used as scaffold background in older files
+  static const Color backgroundColor = primary;
 
   // Gradients
   static const LinearGradient goldGradient = LinearGradient(

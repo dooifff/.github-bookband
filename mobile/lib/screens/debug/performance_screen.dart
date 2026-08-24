@@ -40,7 +40,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
   }
 
   Color _getColor(double value, {double good = 50, double warning = 30}) {
-    if (value >= good) return Colors.green;
+    if (value >= good) return AppTheme.success;
     if (value >= warning) return Colors.yellow;
     return Colors.red;
   }
@@ -181,7 +181,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: fps / 60,
-          backgroundColor: Colors.grey[300],
+          backgroundColor: AppTheme.border,
           valueColor: AlwaysStoppedAnimation(fpsColor),
         ),
         const SizedBox(height: 8),
@@ -225,7 +225,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: memory / 500, // Assume 500MB max
-          backgroundColor: Colors.grey[300],
+          backgroundColor: AppTheme.border,
           valueColor: AlwaysStoppedAnimation(memoryColor),
         ),
         const SizedBox(height: 8),
@@ -256,7 +256,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isSlow ? Colors.orange : Colors.green,
+                color: isSlow ? AppTheme.accent : AppTheme.success,
               ),
             ),
           ],
@@ -266,7 +266,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
           isSlow
               ? 'Startup time is slower than expected'
               : 'Startup time is within normal range',
-          style: TextStyle(color: isSlow ? Colors.orange : Colors.green),
+          style: TextStyle(color: isSlow ? AppTheme.accent : AppTheme.success),
         ),
       ],
     );
@@ -295,7 +295,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                 child: Text(
                   entry.key,
                   style: TextStyle(
-                    color: isSlow ? Colors.orange : null,
+                    color: isSlow ? AppTheme.accent : null,
                   ),
                 ),
               ),
@@ -305,13 +305,13 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: isSlow ? Colors.orange[100] : Colors.green[100],
+                  color: isSlow ? AppTheme.accent[100] : AppTheme.success[100],
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   '${entry.value.inMilliseconds} ms',
                   style: TextStyle(
-                    color: isSlow ? Colors.orange[800] : Colors.green[800],
+                    color: isSlow ? AppTheme.accent[800] : AppTheme.success[800],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -346,7 +346,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                       '${stat.callCount} calls',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: AppTheme.textMuted,
                       ),
                     ),
                   ],
@@ -363,7 +363,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
                     'P95: ${stat.p95TimeMs} ms',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppTheme.textMuted,
                     ),
                   ),
                 ],
@@ -411,7 +411,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Potential leaks: ${leaks.join(', ')}'),
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppTheme.accent,
                 ),
               );
             }

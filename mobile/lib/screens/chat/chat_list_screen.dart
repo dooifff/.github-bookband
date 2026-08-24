@@ -51,7 +51,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
       appBar: AppBar(
         title: const Text('Pesan'),
         backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.primary,
         elevation: 0,
         actions: [
           IconButton(
@@ -108,21 +108,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+          Icon(Icons.chat_bubble_outline, size: 64, color: AppTheme.textMuted),
           const SizedBox(height: 16),
           Text(
             'Belum ada pesan',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+              color: AppTheme.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Mulai chat dengan studio owner\nuntuk informasi lebih lanjut',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: AppTheme.textMuted),
           ),
         ],
       ),
@@ -152,7 +152,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.primary,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -193,7 +193,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         '$unreadCount',
                         style: const TextStyle(
                           fontSize: 10,
-                          color: Colors.white,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -224,7 +224,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           _formatTime(room['last_message_at']),
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey[500],
+                            color: AppTheme.textMuted,
                           ),
                         ),
                     ],
@@ -242,7 +242,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     lastMessage?['message'] ?? 'Mulai chat...',
                     style: TextStyle(
                       fontSize: 13,
-                      color: unreadCount > 0 ? Colors.black87 : Colors.grey[600],
+                      color: unreadCount > 0 ? AppTheme.textPrimary, : AppTheme.textMuted,
                       fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
                     ),
                     maxLines: 1,
@@ -254,7 +254,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             const SizedBox(width: 8),
             Icon(
               Icons.chevron_right,
-              color: Colors.grey[400],
+              color: AppTheme.textMuted,
             ),
           ],
         ),

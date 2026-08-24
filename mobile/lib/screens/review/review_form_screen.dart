@@ -137,7 +137,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       appBar: AppBar(
         title: const Text('Tulis Review'),
         backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.primary,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -164,7 +164,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -192,7 +192,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                   child: Icon(
                     index < _rating ? Icons.star : Icons.star_border,
                     size: 48,
-                    color: index < _rating ? Colors.amber : Colors.grey[300],
+                    color: index < _rating ? AppTheme.warning : AppTheme.border,
                   ),
                 ),
               );
@@ -204,7 +204,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
               _getRatingText(_rating),
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
               ),
             ),
           ),
@@ -234,7 +234,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -267,7 +267,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -287,7 +287,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                 '${_selectedImages.length}/5',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: AppTheme.textMuted,
                 ),
               ),
             ],
@@ -327,7 +327,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                               child: const Icon(
                                 Icons.close,
                                 size: 14,
-                                color: Colors.white,
+                                color: AppTheme.primary,
                               ),
                             ),
                           ),
@@ -358,7 +358,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -378,7 +378,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                   'Nama kamu tidak akan ditampilkan',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textMuted,
                   ),
                 ),
               ],
@@ -405,7 +405,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
         onPressed: _isLoading ? null : _submitReview,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: AppTheme.primary,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -417,7 +417,7 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: AppTheme.primary,
                 ),
               )
             : const Text(

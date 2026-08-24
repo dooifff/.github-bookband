@@ -53,10 +53,10 @@ class _BookingScreenState extends State<BookingScreen> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppTheme.accent[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.studio, color: Colors.orange),
+                      child: const Icon(Icons.studio, color: AppTheme.accent),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -72,7 +72,7 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                           Text(
                             '${widget.studio.city}, ${widget.studio.province}',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: AppTheme.textMuted),
                           ),
                         ],
                       ),
@@ -114,10 +114,10 @@ class _BookingScreenState extends State<BookingScreen> {
                       margin: const EdgeInsets.only(right: 12),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.orange[50] : Colors.grey[50],
+                        color: isSelected ? AppTheme.accent[50] : AppTheme.surfaceLight,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isSelected ? Colors.orange : Colors.grey[300]!,
+                          color: isSelected ? AppTheme.accent : AppTheme.border,
                           width: 2,
                         ),
                       ),
@@ -129,14 +129,14 @@ class _BookingScreenState extends State<BookingScreen> {
                             room.name,
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.orange[700] : Colors.black,
+                              color: isSelected ? AppTheme.accent[700] : AppTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             Formatters.currency(room.pricePerHour),
                             style: TextStyle(
-                              color: isSelected ? Colors.orange : Colors.grey[600],
+                              color: isSelected ? AppTheme.accent : AppTheme.textMuted,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -144,7 +144,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             'Max ${room.capacity} people',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: AppTheme.textMuted,
                             ),
                           ),
                         ],
@@ -187,7 +187,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.orange : Colors.grey[100],
+                        color: isSelected ? AppTheme.accent : AppTheme.surfaceLighter,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -197,7 +197,7 @@ class _BookingScreenState extends State<BookingScreen> {
                             DateFormat('EEE').format(date),
                             style: TextStyle(
                               fontSize: 12,
-                              color: isSelected ? Colors.white : Colors.grey[600],
+                              color: isSelected ? Colors.white : AppTheme.textMuted,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -206,14 +206,14 @@ class _BookingScreenState extends State<BookingScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : Colors.black,
+                              color: isSelected ? Colors.white : AppTheme.textPrimary,
                             ),
                           ),
                           Text(
                             DateFormat('MMM').format(date),
                             style: TextStyle(
                               fontSize: 10,
-                              color: isSelected ? Colors.white70 : Colors.grey[600],
+                              color: isSelected ? Colors.white70 : AppTheme.textMuted,
                             ),
                           ),
                         ],
@@ -275,7 +275,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 _selectedStartTime != null &&
                 _selectedEndTime != null) ...[
               Card(
-                color: Colors.orange[50],
+                color: AppTheme.accent[50],
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -312,7 +312,7 @@ class _BookingScreenState extends State<BookingScreen> {
               child: ElevatedButton(
                 onPressed: _canBook() ? _proceedToBooking : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: AppTheme.accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -341,7 +341,7 @@ class _BookingScreenState extends State<BookingScreen> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.grey[600],
+              color: AppTheme.textMuted,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
           ),

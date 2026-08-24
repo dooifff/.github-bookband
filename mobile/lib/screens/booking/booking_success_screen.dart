@@ -52,7 +52,7 @@ class BookingSuccessScreen extends StatelessWidget {
                 'Your booking has been created successfully',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppTheme.textMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -82,7 +82,7 @@ class BookingSuccessScreen extends StatelessWidget {
               // Payment Code
               if (paymentCode.isNotEmpty)
                 Card(
-                  color: Colors.orange[50],
+                  color: AppTheme.accent[50],
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -91,7 +91,7 @@ class BookingSuccessScreen extends StatelessWidget {
                           'Payment Code',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey,
+                            color: AppTheme.textMuted,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -100,7 +100,7 @@ class BookingSuccessScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: AppTheme.accent,
                             letterSpacing: 2,
                           ),
                         ),
@@ -109,7 +109,7 @@ class BookingSuccessScreen extends StatelessWidget {
                           'Use this code for payment',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: AppTheme.textMuted,
                           ),
                         ),
                       ],
@@ -130,8 +130,8 @@ class BookingSuccessScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.accent,
+                    foregroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

@@ -279,7 +279,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 'Tingkat Okupansi',
                 '${(_stats['occupancy_rate'] ?? 0.0).toStringAsFixed(1)}%',
                 Icons.pie_chart,
-                Colors.orange,
+                AppTheme.warning,
               ),
             ),
             const SizedBox(width: 12),

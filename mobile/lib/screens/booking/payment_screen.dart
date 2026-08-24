@@ -80,7 +80,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           widget.booking.bookingCode,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
+                            color: AppTheme.accent,
                           ),
                         ),
                       ],
@@ -119,11 +119,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
               final isSelected = _selectedMethod == method['id'];
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
-                color: isSelected ? Colors.orange[50] : null,
+                color: isSelected ? AppTheme.accent[50] : null,
                 child: ExpansionTile(
                   leading: Icon(
                     method['icon'],
-                    color: isSelected ? Colors.orange : Colors.grey,
+                    color: isSelected ? AppTheme.accent : AppTheme.textMuted,
                   ),
                   title: Text(
                     method['name'],
@@ -151,7 +151,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             _selectedBank = value;
                           });
                         },
-                        activeColor: Colors.orange,
+                        activeColor: AppTheme.accent,
                       );
                     }).toList(),
                   ],
@@ -168,8 +168,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ? _processPayment
                     : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

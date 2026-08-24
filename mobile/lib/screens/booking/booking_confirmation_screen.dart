@@ -78,7 +78,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Icon(Icons.calendar_today, color: Colors.orange),
+                        const Icon(Icons.calendar_today, color: AppTheme.accent),
                         const SizedBox(width: 8),
                         Text(DateFormat('EEEE, dd MMMM yyyy').format(widget.date)),
                       ],
@@ -86,7 +86,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.access_time, color: Colors.orange),
+                        const Icon(Icons.access_time, color: AppTheme.accent),
                         const SizedBox(width: 8),
                         Text('${widget.startTime} - ${widget.endTime}'),
                       ],
@@ -104,7 +104,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
             // Price Breakdown
             Card(
-              color: Colors.orange[50],
+              color: AppTheme.accent[50],
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -159,7 +159,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       '• Please treat the studio equipment with care',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: AppTheme.textMuted,
                         height: 1.5,
                       ),
                     ),
@@ -175,8 +175,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _confirmBooking,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.accent,
+                  foregroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -210,7 +210,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(icon, color: Colors.orange),
+            Icon(icon, color: AppTheme.accent),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +219,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textMuted,
                   ),
                 ),
                 Text(

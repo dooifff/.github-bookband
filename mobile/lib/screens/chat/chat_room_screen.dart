@@ -152,13 +152,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 widget.studioName!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.8),
+                  color: AppTheme.textPrimary.withOpacity(0.8),
                 ),
               ),
           ],
         ),
         backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.primary,
         elevation: 0,
       ),
       body: Column(
@@ -205,13 +205,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[400]),
+            Icon(Icons.chat_bubble_outline, size: 64, color: AppTheme.textMuted),
             const SizedBox(height: 16),
             Text(
               'Mulai percakapan',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
               ),
             ),
             const SizedBox(height: 8),
@@ -219,7 +219,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               'Kirim pesan untuk memulai chat',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[500],
+                color: AppTheme.textMuted,
               ),
             ),
           ],
@@ -283,7 +283,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isMe ? AppTheme.primaryColor : Colors.white,
+                color: isMe ? AppTheme.primaryColor : AppTheme.primary,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
@@ -306,7 +306,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     message['message'] ?? '',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isMe ? Colors.white : Colors.black87,
+                      color: isMe ? Colors.white : AppTheme.textPrimary,,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -318,8 +318,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           color: isMe
-                              ? Colors.white.withOpacity(0.7)
-                              : Colors.grey[500],
+                              ? AppTheme.textSecondary,
+                              : AppTheme.textMuted,
                         ),
                       ),
                       if (isMe) ...[
@@ -327,7 +327,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         Icon(
                           isRead ? Icons.done_all : Icons.done,
                           size: 14,
-                          color: Colors.white.withOpacity(0.7),
+                          color: AppTheme.textSecondary,,
                         ),
                       ],
                     ],
@@ -346,7 +346,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -394,12 +394,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: AppTheme.primary,
                       ),
                     )
                   : const Icon(
                       Icons.send,
-                      color: Colors.white,
+                      color: AppTheme.primary,
                       size: 20,
                     ),
             ),

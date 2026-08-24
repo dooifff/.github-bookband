@@ -48,7 +48,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                   title: Text(
                     studio.name,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -60,13 +60,13 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                           studio.images.first.url,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey[300],
+                            color: AppTheme.border,
                             child: const Icon(Icons.studio, size: 100),
                           ),
                         )
                       else
                         Container(
-                          color: Colors.orange[100],
+                          color: AppTheme.accent[100],
                           child: const Icon(Icons.studio, size: 100),
                         ),
                       const DecoratedBox(
@@ -74,7 +74,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [Colors.transparent, Colors.black54],
+                            colors: [Colors.transparent, AppTheme.primary.withOpacity(0.85)],
                           ),
                         ),
                       ),
@@ -104,7 +104,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                       // Rating & Reviews
                       Row(
                         children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 20),
+                          const Icon(Icons.star, color: AppTheme.accent, size: 20),
                           const SizedBox(width: 4),
                           Text(
                             studio.averageRating.toStringAsFixed(1),
@@ -116,7 +116,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                           const SizedBox(width: 8),
                           Text(
                             '(${studio.totalReviews} reviews)',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: AppTheme.textMuted),
                           ),
                           const Spacer(),
                           Container(
@@ -178,7 +178,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                         const SizedBox(height: 8),
                         Text(
                           studio.description!,
-                          style: TextStyle(color: Colors.grey[600], height: 1.5),
+                          style: TextStyle(color: AppTheme.textMuted, height: 1.5),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -212,7 +212,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                             return Chip(
                               avatar: const Icon(Icons.mic, size: 18),
                               label: Text(eq.name),
-                              backgroundColor: Colors.orange[50],
+                              backgroundColor: AppTheme.accent[50],
                             );
                           }).toList(),
                         ),
@@ -286,8 +286,8 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.accent,
+              foregroundColor: AppTheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -306,12 +306,12 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 20, color: Colors.orange),
+        Icon(icon, size: 20, color: AppTheme.accent),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: AppTheme.textMuted),
           ),
         ),
       ],
@@ -341,7 +341,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: AppTheme.accent,
                   ),
                 ),
               ],
@@ -349,11 +349,11 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.people, size: 16, color: Colors.grey[600]),
+                Icon(Icons.people, size: 16, color: AppTheme.textMuted),
                 const SizedBox(width: 4),
                 Text(
                   'Capacity: ${room.capacity} people',
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: AppTheme.textMuted),
                 ),
               ],
             ),
@@ -361,7 +361,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
               const SizedBox(height: 8),
               Text(
                 room.description!,
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
               ),
             ],
           ],

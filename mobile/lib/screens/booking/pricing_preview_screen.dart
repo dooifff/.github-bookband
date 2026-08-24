@@ -84,7 +84,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
       appBar: AppBar(
         title: const Text('Prediksi Harga'),
         backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.primary,
         elevation: 0,
         actions: [
           IconButton(
@@ -113,7 +113,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -142,7 +142,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                   '${DateFormat('dd MMM').format(_startDate)} - ${DateFormat('dd MMM yyyy').format(_endDate)}',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textMuted,
                   ),
                 ),
               ],
@@ -187,13 +187,13 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.price_check, size: 64, color: Colors.grey[400]),
+            Icon(Icons.price_check, size: 64, color: AppTheme.textMuted),
             const SizedBox(height: 16),
             Text(
               'Tidak ada data harga',
               style: TextStyle(
                 fontSize: 16,
-                color: Colors.grey[600],
+                color: AppTheme.textMuted,
               ),
             ),
           ],
@@ -224,7 +224,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
         border: isToday
             ? Border.all(color: AppTheme.primaryColor, width: 2)
@@ -254,7 +254,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.grey[800],
+                          color: AppTheme.surfaceLighter,,
                         ),
                       ),
                       if (isToday) ...[
@@ -272,7 +272,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                             'Hari Ini',
                             style: TextStyle(
                               fontSize: 10,
-                              color: Colors.white,
+                              color: AppTheme.primary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -284,7 +284,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                     DateFormat('dd MMMM yyyy', 'id').format(date),
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppTheme.textMuted,
                     ),
                   ),
                 ],
@@ -322,7 +322,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                   isDiscount
                       ? Colors.green
                       : isSurcharge
-                          ? Colors.orange
+                          ? AppTheme.accent
                           : Colors.blue,
                 ),
               ),
@@ -378,8 +378,8 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
       textColor = Colors.green;
       text = '-${((1 - multiplier) * 100).toStringAsFixed(0)}%';
     } else if (isSurcharge) {
-      backgroundColor = Colors.orange.withOpacity(0.1);
-      textColor = Colors.orange;
+      backgroundColor = AppTheme.accent.withOpacity(0.1);
+      textColor = AppTheme.accent;
       text = '+${((multiplier - 1) * 100).toStringAsFixed(0)}%';
     } else {
       backgroundColor = Colors.grey.withOpacity(0.1);

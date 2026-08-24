@@ -232,7 +232,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                   symbol: 'Rp',
                   decimalDigits: 0,
                 ).format(_revenueSummary['last_month'] ?? 0),
-                Colors.orange,
+                AppTheme.accent,
               ),
             ),
             const SizedBox(width: 12),
@@ -482,7 +482,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                               '${studio['bookings']} booking',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey[600],
+                                color: AppTheme.textMuted,
                               ),
                             ),
                           ],
@@ -583,7 +583,7 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                   customerName,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textMuted,
                   ),
                 ),
                 Text(
@@ -617,14 +617,14 @@ class _OwnerRevenueScreenState extends State<OwnerRevenueScreen> {
                 decoration: BoxDecoration(
                   color: status == 'completed'
                       ? Colors.green.withOpacity(0.1)
-                      : Colors.orange.withOpacity(0.1),
+                      : AppTheme.accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   status == 'completed' ? 'Selesai' : 'Pending',
                   style: TextStyle(
                     fontSize: 10,
-                    color: status == 'completed' ? Colors.green : Colors.orange,
+                    color: status == 'completed' ? Colors.green : AppTheme.accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

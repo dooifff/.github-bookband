@@ -250,14 +250,14 @@ class _OwnerBookingsScreenState extends State<OwnerBookingsScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.grey[600],
+              color: AppTheme.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Booking ${_selectedStatus == 'all' ? '' : 'dengan status $_selectedStatus'}\ntidak ditemukan',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[500]),
+            style: TextStyle(color: AppTheme.textMuted),
           ),
         ],
       ),
@@ -388,7 +388,7 @@ class _BookingDetailSheet extends StatelessWidget {
                       onPressed: onConfirm,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.accent,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppTheme.primary,
                       ),
                       child: const Text('Konfirmasi'),
                     ),
@@ -405,7 +405,7 @@ class _BookingDetailSheet extends StatelessWidget {
                   onPressed: onComplete,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.success,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text('Selesaikan Booking'),

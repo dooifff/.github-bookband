@@ -70,7 +70,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       appBar: AppBar(
         title: const Text('Referral'),
         backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.primary,
         elevation: 0,
       ),
       body: _isLoading
@@ -137,7 +137,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const Icon(
             Icons.card_giftcard,
             size: 64,
-            color: Colors.white,
+            color: AppTheme.primary,
           ),
           const SizedBox(height: 16),
           const Text(
@@ -145,7 +145,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: AppTheme.primary,
             ),
           ),
           const SizedBox(height: 8),
@@ -154,7 +154,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
+              color: AppTheme.textSecondary,,
             ),
           ),
         ],
@@ -170,7 +170,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -200,7 +200,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               Container(
                 width: 1,
                 height: 50,
-                color: Colors.grey[300],
+                color: AppTheme.border,
               ),
               Expanded(
                 child: _buildStatItem(
@@ -213,7 +213,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
               Container(
                 width: 1,
                 height: 50,
-                color: Colors.grey[300],
+                color: AppTheme.border,
               ),
               Expanded(
                 child: _buildStatItem(
@@ -244,7 +244,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+            color: AppTheme.surfaceLighter,,
           ),
         ),
         const SizedBox(height: 4),
@@ -252,7 +252,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           label,
           style: TextStyle(
             fontSize: 11,
-            color: Colors.grey[500],
+            color: AppTheme.textMuted,
           ),
         ),
       ],
@@ -267,7 +267,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -338,7 +338,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   label: const Text('Bagikan'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.primary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -355,7 +355,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -446,7 +446,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.primary,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

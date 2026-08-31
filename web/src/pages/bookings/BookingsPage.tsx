@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -22,9 +22,7 @@ export default function BookingsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => { fetchBookings() }, [page, statusFilter])
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -38,7 +36,9 @@ export default function BookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, statusFilter])
+
+  useEffect(() => { fetchBookings() }, [fetchBookings])
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -58,20 +58,20 @@ export default function BookingsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Bookings</h1>
-          <p className="text-text-secondary mt-1 text-sm">Manage all platform bookings</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Pemesanan</h1>
+          <p className="text-text-secondary mt-1 text-sm">Kelola semua pemesanan platform</p>
         </div>
 
         {/* Filters */}
         <div className="glass-subtle rounded-xl p-4 animate-fade-in-up stagger-1">
           <div className="flex flex-wrap gap-3">
             <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }} className="select-luxury text-sm">
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">Semua Status</option>
+              <option value="pending">Menunggu</option>
+              <option value="confirmed">Dikonfirmasi</option>
+              <option value="ongoing">Berlangsung</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
             </select>
           </div>
         </div>
@@ -95,11 +95,11 @@ export default function BookingsPage() {
                   <tr><td colSpan={6} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-                      <p className="text-text-muted text-sm">Loading bookings...</p>
+                      <p className="text-text-muted text-sm">Memuat pemesanan...</p>
                     </div>
                   </td></tr>
                 ) : bookings.length === 0 ? (
-                  <tr><td colSpan={6} className="px-6 py-16 text-center text-text-muted text-sm">No bookings found</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-16 text-center text-text-muted text-sm">Tidak ada pemesanan ditemukan</td></tr>
                 ) : (
                   bookings.map((booking) => (
                     <tr key={booking.id}>
@@ -129,8 +129,8 @@ export default function BookingsPage() {
             <div className="px-6 py-4 border-t border-border/40 flex items-center justify-between">
               <p className="text-text-muted text-xs">Page {page} of {totalPages}</p>
               <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Previous</button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Sebelumnya</button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Selanjutnya</button>
               </div>
             </div>
           )}

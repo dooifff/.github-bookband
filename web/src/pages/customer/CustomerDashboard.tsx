@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -15,9 +15,7 @@ export default function CustomerDashboard() {
   const [data, setData] = useState<CustomerData | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchDashboard() }, [])
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       const [bookingsRes, favRes, notifRes] = await Promise.all([
         api.get('/bookings?per_page=5'),
@@ -40,7 +38,9 @@ export default function CustomerDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchDashboard() }, [fetchDashboard])
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
@@ -59,10 +59,10 @@ export default function CustomerDashboard() {
   }
 
   const statCards = [
-    { title: 'My Bookings', value: data?.total_bookings || 0, icon: '📅', iconBg: 'bg-blue-500/10' },
-    { title: 'Pending', value: data?.pending_bookings || 0, icon: '⏳', iconBg: 'bg-warning/10' },
-    { title: 'Completed', value: data?.completed_bookings || 0, icon: '✅', iconBg: 'bg-success/10' },
-    { title: 'Favorites', value: data?.total_favorites || 0, icon: '❤️', iconBg: 'bg-red-500/10' },
+    { title: 'Pemesanan Saya', value: data?.total_bookings || 0, icon: '📅', iconBg: 'bg-blue-500/10' },
+    { title: 'Menunggu', value: data?.pending_bookings || 0, icon: '⏳', iconBg: 'bg-warning/10' },
+    { title: 'Selesai', value: data?.completed_bookings || 0, icon: '✅', iconBg: 'bg-success/10' },
+    { title: 'Favorit', value: data?.total_favorites || 0, icon: '❤️', iconBg: 'bg-red-500/10' },
   ]
 
   return (
@@ -70,8 +70,8 @@ export default function CustomerDashboard() {
       <div className="space-y-8">
         {/* Header */}
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">My Dashboard</h1>
-          <p className="text-text-secondary mt-1 text-sm">Welcome back! Manage your bookings and studios.</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dasbor Saya</h1>
+          <p className="text-text-secondary mt-1 text-sm">Selamat datang kembali! Kelola pemesanan dan studio Anda.</p>
         </div>
 
         {/* Stats */}
@@ -94,10 +94,10 @@ export default function CustomerDashboard() {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { href: '/customer/studios', icon: '🔍', label: 'Find Studios' },
-            { href: '/customer/bookings', icon: '📅', label: 'My Bookings' },
-            { href: '/customer/favorites', icon: '❤️', label: 'Favorites' },
-            { href: '/customer/notifications', icon: '🔔', label: 'Notifications' },
+            { href: '/customer/studios', icon: '🔍', label: 'Cari Studio' },
+            { href: '/customer/bookings', icon: '📅', label: 'Pemesanan Saya' },
+            { href: '/customer/favorites', icon: '❤️', label: 'Favorit' },
+            { href: '/customer/notifications', icon: '🔔', label: 'Notifikasi' },
           ].map((action) => (
             <a
               key={action.href}
@@ -114,8 +114,8 @@ export default function CustomerDashboard() {
           {/* Upcoming Bookings */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-5">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Upcoming Bookings</h2>
-              <a href="/customer/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+              <h2 className="text-base font-semibold text-text-primary">Pemesanan Mendatang</h2>
+              <a href="/customer/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">Lihat semua →</a>
             </div>
             <div className="space-y-1">
               {data?.upcoming_bookings?.map((booking: any) => (
@@ -130,14 +130,14 @@ export default function CustomerDashboard() {
                       booking.status === 'pending' ? 'bg-warning/10 text-warning' :
                       'bg-accent/10 text-accent'
                     }`}>
-                      {booking.status === 'confirmed' ? 'Confirmed' : booking.status === 'pending' ? 'Pending' : 'Awaiting Payment'}
+                      {booking.status === 'confirmed' ? 'Dikonfirmasi' : booking.status === 'pending' ? 'Menunggu' : 'Menunggu Pembayaran'}
                     </span>
                     <p className="text-text-muted text-xs mt-0.5">{formatCurrency(booking.total)}</p>
                   </div>
                 </div>
               ))}
               {(!data?.upcoming_bookings || data.upcoming_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No upcoming bookings</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada pemesanan mendatang</p>
               )}
             </div>
           </div>
@@ -145,8 +145,8 @@ export default function CustomerDashboard() {
           {/* Notifications */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Notifications</h2>
-              <a href="/customer/notifications" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+              <h2 className="text-base font-semibold text-text-primary">Notifikasi</h2>
+              <a href="/customer/notifications" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">Lihat semua →</a>
             </div>
             <div className="space-y-1">
               {data?.notifications?.map((notif: any) => (
@@ -164,7 +164,7 @@ export default function CustomerDashboard() {
                 </div>
               ))}
               {(!data?.notifications || data.notifications.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No notifications</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada notifikasi</p>
               )}
             </div>
           </div>

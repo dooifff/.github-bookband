@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -16,9 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  useEffect(() => { fetchDashboard() }, [])
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -30,16 +28,18 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchDashboard() }, [fetchDashboard])
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
 
   const statCards = [
-    { title: 'Total Users', value: stats?.total_users || 0, icon: '👥', accent: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/10' },
-    { title: 'Total Studios', value: stats?.total_studios || 0, icon: '🏠', accent: 'from-success/15 to-success/5', iconBg: 'bg-success/10' },
-    { title: 'Total Bookings', value: stats?.total_bookings || 0, icon: '📅', accent: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/10' },
-    { title: 'Total Revenue', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', accent: 'from-accent/15 to-accent/5', iconBg: 'bg-accent/10' },
+    { title: 'Total Pengguna', value: stats?.total_users || 0, icon: '👥', accent: 'from-blue-500/15 to-blue-500/5', iconBg: 'bg-blue-500/10' },
+    { title: 'Total Studio', value: stats?.total_studios || 0, icon: '🏠', accent: 'from-success/15 to-success/5', iconBg: 'bg-success/10' },
+    { title: 'Total Pemesanan', value: stats?.total_bookings || 0, icon: '📅', accent: 'from-purple-500/15 to-purple-500/5', iconBg: 'bg-purple-500/10' },
+    { title: 'Total Pendapatan', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', accent: 'from-accent/15 to-accent/5', iconBg: 'bg-accent/10' },
   ]
 
   if (loading) {
@@ -48,7 +48,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-            <p className="text-text-muted text-sm">Loading dashboard...</p>
+            <p className="text-text-muted text-sm">Memuat dasbor...</p>
           </div>
         </div>
       </AdminLayout>
@@ -61,7 +61,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-danger mb-4">{error}</p>
-            <button onClick={fetchDashboard} className="btn-gold text-sm">Retry</button>
+            <button onClick={fetchDashboard} className="btn-gold text-sm">Coba Lagi</button>
           </div>
         </div>
       </AdminLayout>
@@ -74,7 +74,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="animate-fade-in-up">
           <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dashboard</h1>
-          <p className="text-text-secondary mt-1 text-sm">Welcome back! Here's what's happening today.</p>
+          <p className="text-text-secondary mt-1 text-sm">Selamat datang kembali! Berikut yang terjadi hari ini.</p>
         </div>
 
         {/* Stats Grid */}
@@ -99,8 +99,8 @@ export default function Dashboard() {
           {/* Recent Bookings */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-5">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Recent Bookings</h2>
-              <a href="/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+              <h2 className="text-base font-semibold text-text-primary">Pemesanan Terbaru</h2>
+              <a href="/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">Lihat semua →</a>
             </div>
             <div className="space-y-1">
               {stats?.recent_bookings?.slice(0, 5).map((booking) => (
@@ -125,7 +125,7 @@ export default function Dashboard() {
                 </div>
               ))}
               {(!stats?.recent_bookings || stats.recent_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No recent bookings</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada pemesanan terbaru</p>
               )}
             </div>
           </div>
@@ -133,8 +133,8 @@ export default function Dashboard() {
           {/* Recent Users */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Recent Users</h2>
-              <a href="/users" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+              <h2 className="text-base font-semibold text-text-primary">Pengguna Terbaru</h2>
+              <a href="/users" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">Lihat semua →</a>
             </div>
             <div className="space-y-1">
               {stats?.recent_users?.slice(0, 5).map((user) => (
@@ -154,7 +154,7 @@ export default function Dashboard() {
                 </div>
               ))}
               {(!stats?.recent_users || stats.recent_users.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No recent users</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada pengguna terbaru</p>
               )}
             </div>
           </div>
@@ -162,13 +162,13 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <div className="card-luxury p-6 animate-fade-in-up stagger-7">
-          <h2 className="text-base font-semibold text-text-primary mb-5">Quick Actions</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-5">Aksi Cepat</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { href: '/users', icon: '👥', label: 'Manage Users' },
-              { href: '/studios', icon: '🏠', label: 'Manage Studios' },
-              { href: '/bookings', icon: '📅', label: 'View Bookings' },
-              { href: '/settings', icon: '⚙️', label: 'Settings' },
+              { href: '/users', icon: '👥', label: 'Kelola Pengguna' },
+              { href: '/studios', icon: '🏠', label: 'Kelola Studio' },
+              { href: '/bookings', icon: '📅', label: 'Lihat Pemesanan' },
+              { href: '/settings', icon: '⚙️', label: 'Pengaturan' },
             ].map((action) => (
               <a
                 key={action.href}

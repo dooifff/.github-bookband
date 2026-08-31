@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -21,9 +21,7 @@ export default function CustomerStudiosPage() {
   const [search, setSearch] = useState('')
   const [city, setCity] = useState('')
 
-  useEffect(() => { fetchStudios() }, [search, city])
-
-  const fetchStudios = async () => {
+  const fetchStudios = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -36,14 +34,16 @@ export default function CustomerStudiosPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, city])
+
+  useEffect(() => { fetchStudios() }, [fetchStudios])
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Browse Studios</h1>
-          <p className="text-text-secondary mt-1 text-sm">Find and book music studios</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Jelajahi Studio</h1>
+          <p className="text-text-secondary mt-1 text-sm">Temukan dan pesan studio musik</p>
         </div>
 
         {/* Search */}
@@ -52,14 +52,14 @@ export default function CustomerStudiosPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search studios..."
+            placeholder="Cari studio..."
             className="input-luxury flex-1 text-sm"
           />
           <input
             type="text"
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            placeholder="Filter by city..."
+            placeholder="Filter berdasarkan kota..."
             className="input-luxury w-48 text-sm"
           />
         </div>
@@ -69,13 +69,13 @@ export default function CustomerStudiosPage() {
           <div className="flex items-center justify-center h-32">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-              <p className="text-text-muted text-sm">Loading studios...</p>
+              <p className="text-text-muted text-sm">Memuat studio...</p>
             </div>
           </div>
         ) : studios.length === 0 ? (
           <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">🔍</span>
-            <p className="text-text-muted text-lg">No studios found</p>
+            <p className="text-text-muted text-lg">Tidak ada studio ditemukan</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -86,7 +86,7 @@ export default function CustomerStudiosPage() {
                   <span className="text-5xl opacity-60 group-hover:scale-110 transition-transform duration-500">🎵</span>
                   {studio.is_verified && (
                     <div className="absolute top-3 right-3 px-2 py-0.5 bg-accent/15 border border-accent/20 rounded-full text-accent text-[0.6rem] font-medium">
-                      ✓ Verified
+                      ✓ Terverifikasi
                     </div>
                   )}
                 </div>
@@ -100,12 +100,10 @@ export default function CustomerStudiosPage() {
                       <span className="text-text-muted text-xs">({studio.total_reviews})</span>
                     </div>
                     <a
-                      href={`http://localhost:5173/studios/${studio.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/customer/studios/${studio.slug}`}
                       className="btn-gold text-xs py-1.5 px-4"
                     >
-                      View
+                      Lihat & Book
                     </a>
                   </div>
                 </div>

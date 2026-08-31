@@ -2,31 +2,31 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const adminNavigation = [
-  { name: 'Dashboard', href: '/admin', icon: '📊' },
-  { name: 'Users', href: '/users', icon: '👥' },
-  { name: 'Studios', href: '/studios', icon: '🏠' },
-  { name: 'Bookings', href: '/bookings', icon: '📅' },
-  { name: 'Performance', href: '/performance', icon: '⚡' },
-  { name: 'Alerts', href: '/alerts', icon: '🔔' },
-  { name: 'Comparison', href: '/comparison', icon: '📈' },
-  { name: 'Settings', href: '/settings', icon: '⚙️' },
+  { name: 'Dasbor', href: '/admin', icon: '📊' },
+  { name: 'Pengguna', href: '/users', icon: '👥' },
+  { name: 'Studio', href: '/studios', icon: '🏠' },
+  { name: 'Pemesanan', href: '/bookings', icon: '📅' },
+  { name: 'Performa', href: '/performance', icon: '⚡' },
+  { name: 'Peringatan', href: '/alerts', icon: '🔔' },
+  { name: 'Perbandingan', href: '/comparison', icon: '📈' },
+  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
 ]
 
 const ownerNavigation = [
-  { name: 'Dashboard', href: '/owner/dashboard', icon: '📊' },
-  { name: 'My Studios', href: '/owner/studios', icon: '🏠' },
-  { name: 'Bookings', href: '/owner/bookings', icon: '📅' },
-  { name: 'Revenue', href: '/owner/revenue', icon: '💰' },
-  { name: 'Settings', href: '/settings', icon: '⚙️' },
+  { name: 'Dasbor', href: '/owner/dashboard', icon: '📊' },
+  { name: 'Studio Saya', href: '/owner/studios', icon: '🏠' },
+  { name: 'Pemesanan', href: '/owner/bookings', icon: '📅' },
+  { name: 'Pendapatan', href: '/owner/revenue', icon: '💰' },
+  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
 ]
 
 const customerNavigation = [
-  { name: 'Dashboard', href: '/customer/dashboard', icon: '📊' },
-  { name: 'Browse Studios', href: '/customer/studios', icon: '🔍' },
-  { name: 'My Bookings', href: '/customer/bookings', icon: '📅' },
-  { name: 'Favorites', href: '/customer/favorites', icon: '❤️' },
-  { name: 'Notifications', href: '/customer/notifications', icon: '🔔' },
-  { name: 'Settings', href: '/settings', icon: '⚙️' },
+  { name: 'Dasbor', href: '/customer/dashboard', icon: '📊' },
+  { name: 'Jelajahi Studio', href: '/customer/studios', icon: '🔍' },
+  { name: 'Pemesanan Saya', href: '/customer/bookings', icon: '📅' },
+  { name: 'Favorit', href: '/customer/favorites', icon: '❤️' },
+  { name: 'Notifikasi', href: '/customer/notifications', icon: '🔔' },
+  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
 ]
 
 interface AdminLayoutProps {
@@ -100,7 +100,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {user?.role === 'super_admin' && (
           <div className="px-3 pb-3">
             <div className="glass-subtle rounded-xl p-3">
-              <p className="text-text-muted text-[0.65rem] font-medium tracking-widest uppercase mb-2.5 px-1">Switch View</p>
+              <p className="text-text-muted text-[0.65rem] font-medium tracking-widest uppercase mb-2.5 px-1">Ganti Tampilan</p>
               <div className="flex gap-1">
                 <Link
                   to="/admin"
@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       ? 'bg-accent text-primary shadow-sm shadow-accent/20'
                       : 'text-text-muted hover:text-text-secondary hover:bg-surface-lighter/60'
                   }`}
-                >Owner</Link>
+                >Pemilik</Link>
                 <Link
                   to="/customer/dashboard"
                   className={`flex-1 text-center py-1.5 text-[0.65rem] font-medium rounded-lg transition-all ${
@@ -125,7 +125,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       ? 'bg-accent text-primary shadow-sm shadow-accent/20'
                       : 'text-text-muted hover:text-text-secondary hover:bg-surface-lighter/60'
                   }`}
-                >Customer</Link>
+                >Pelanggan</Link>
               </div>
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <button
               onClick={handleLogout}
               className="text-text-muted hover:text-danger transition-colors p-1.5 rounded-lg hover:bg-danger/10"
-              title="Logout"
+              title="Keluar"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />

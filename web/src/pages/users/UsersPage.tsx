@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -20,9 +20,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => { fetchUsers() }, [page, roleFilter])
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -36,7 +34,9 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, roleFilter])
+
+  useEffect(() => { fetchUsers() }, [fetchUsers])
 
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {
@@ -57,8 +57,8 @@ export default function UsersPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Users</h1>
-          <p className="text-text-secondary mt-1 text-sm">Manage platform users</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Pengguna</h1>
+          <p className="text-text-secondary mt-1 text-sm">Kelola pengguna platform</p>
         </div>
 
         {/* Filters */}
@@ -67,14 +67,14 @@ export default function UsersPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search users..."
+            placeholder="Cari pengguna..."
             className="input-luxury text-sm flex-1 max-w-xs"
           />
           <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1) }} className="select-luxury text-sm">
-            <option value="">All Roles</option>
+            <option value="">Semua Peran</option>
             <option value="admin">Admin</option>
-            <option value="owner">Owner</option>
-            <option value="customer">Customer</option>
+            <option value="owner">Pemilik</option>
+            <option value="customer">Pelanggan</option>
           </select>
         </div>
 
@@ -96,11 +96,11 @@ export default function UsersPage() {
                   <tr><td colSpan={5} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-                      <p className="text-text-muted text-sm">Loading users...</p>
+                      <p className="text-text-muted text-sm">Memuat pengguna...</p>
                     </div>
                   </td></tr>
                 ) : filteredUsers.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-16 text-center text-text-muted text-sm">No users found</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-16 text-center text-text-muted text-sm">Tidak ada pengguna ditemukan</td></tr>
                 ) : (
                   filteredUsers.map((user) => (
                     <tr key={user.id}>
@@ -117,7 +117,7 @@ export default function UsersPage() {
                       <td className="text-text-muted text-sm">{new Date(user.created_at).toLocaleDateString('id-ID')}</td>
                       <td>
                         <span className={`badge ${user.email_verified_at ? 'bg-success/10 text-success border border-success/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
-                          {user.email_verified_at ? 'Verified' : 'Unverified'}
+                          {user.email_verified_at ? 'Terverifikasi' : 'Belum Diverifikasi'}
                         </span>
                       </td>
                     </tr>
@@ -131,8 +131,8 @@ export default function UsersPage() {
             <div className="px-6 py-4 border-t border-border/40 flex items-center justify-between">
               <p className="text-text-muted text-xs">Page {page} of {totalPages}</p>
               <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Previous</button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Sebelumnya</button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Selanjutnya</button>
               </div>
             </div>
           )}

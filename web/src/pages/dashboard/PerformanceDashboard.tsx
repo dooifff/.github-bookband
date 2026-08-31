@@ -45,6 +45,31 @@ interface PerformanceData {
   timestamp: string
 }
 
+function getBarColor(value: number, thresholds: { warning: number; critical: number }) {
+  if (value >= thresholds.critical) return 'bg-red-500'
+  if (value >= thresholds.warning) return 'bg-yellow-500'
+  return 'bg-success'
+}
+
+function CircularProgress({ value, label, color }: { value: number; label: string; color: string }) {
+  const circumference = 2 * Math.PI * 45
+  const strokeDashoffset = circumference - (value / 100) * circumference
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-28 h-28">
+        <svg className="w-28 h-28 transform -rotate-90">
+          <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" className="stroke-surface-lighter" />
+          <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className={`${color} transition-all duration-700`} strokeLinecap="round" />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xl font-bold text-text-primary">{Math.round(value)}%</span>
+        </div>
+      </div>
+      <span className="mt-2 text-xs text-text-secondary font-medium">{label}</span>
+    </div>
+  )
+}
+
 export default function PerformanceDashboard() {
   const [metrics, setMetrics] = useState<PerformanceData | null>(null)
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([])
@@ -80,38 +105,13 @@ export default function PerformanceDashboard() {
     return () => clearInterval(interval)
   }, [autoRefresh, refreshInterval, fetchMetrics])
 
-  const getBarColor = (value: number, thresholds: { warning: number; critical: number }) => {
-    if (value >= thresholds.critical) return 'bg-red-500'
-    if (value >= thresholds.warning) return 'bg-yellow-500'
-    return 'bg-success'
-  }
-
-  const CircularProgress = ({ value, label, color }: { value: number; label: string; color: string }) => {
-    const circumference = 2 * Math.PI * 45
-    const strokeDashoffset = circumference - (value / 100) * circumference
-    return (
-      <div className="flex flex-col items-center">
-        <div className="relative w-28 h-28">
-          <svg className="w-28 h-28 transform -rotate-90">
-            <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" className="stroke-surface-lighter" />
-            <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className={`${color} transition-all duration-700`} strokeLinecap="round" />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xl font-bold text-text-primary">{Math.round(value)}%</span>
-          </div>
-        </div>
-        <span className="mt-2 text-xs text-text-secondary font-medium">{label}</span>
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-            <p className="text-text-muted text-sm">Loading performance metrics...</p>
+            <p className="text-text-muted text-sm">Memuat metrik performa...</p>
           </div>
         </div>
       </AdminLayout>
@@ -124,7 +124,7 @@ export default function PerformanceDashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <p className="text-danger mb-4">{error}</p>
-            <button onClick={fetchMetrics} className="btn-gold text-sm">Retry</button>
+            <button onClick={fetchMetrics} className="btn-gold text-sm">Coba Lagi</button>
           </div>
         </div>
       </AdminLayout>
@@ -137,12 +137,12 @@ export default function PerformanceDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Performance Dashboard</h1>
-            <p className="text-text-secondary mt-1 text-sm">Real-time system metrics and monitoring</p>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dasbor Performa</h1>
+            <p className="text-text-secondary mt-1 text-sm">Metrik dan pemantauan sistem secara real-time</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-text-muted text-xs">Auto-refresh</label>
+              <label className="text-text-muted text-xs">Perbarui otomatis</label>
               <button onClick={() => setAutoRefresh(!autoRefresh)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${autoRefresh ? 'bg-success/15 text-success border border-success/20' : 'bg-surface-lighter text-text-muted border border-border'}`}>
                 {autoRefresh ? 'ON' : 'OFF'}
               </button>
@@ -158,7 +158,7 @@ export default function PerformanceDashboard() {
           </div>
         </div>
 
-        {lastUpdated && <p className="text-text-muted text-xs animate-fade-in">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
+        {lastUpdated && <p className="text-text-muted text-xs animate-fade-in">Terakhir diperbarui: {lastUpdated.toLocaleTimeString()}</p>}
 
         {/* Alerts */}
         {alerts.length > 0 && (
@@ -176,10 +176,10 @@ export default function PerformanceDashboard() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { title: 'CPU Usage', value: `${metrics?.server.cpu_usage || 0}%`, icon: '🖥️', subtitle: metrics?.server.uptime },
-            { title: 'Memory', value: `${metrics?.server.memory.percentage || 0}%`, icon: '💾', subtitle: `${metrics?.server.memory.used} / ${metrics?.server.memory.total}` },
+            { title: 'Penggunaan CPU', value: `${metrics?.server.cpu_usage || 0}%`, icon: '🖥️', subtitle: metrics?.server.uptime },
+            { title: 'Memori', value: `${metrics?.server.memory.percentage || 0}%`, icon: '💾', subtitle: `${metrics?.server.memory.used} / ${metrics?.server.memory.total}` },
             { title: 'Disk', value: `${metrics?.server.disk.percentage || 0}%`, icon: '💿', subtitle: `${metrics?.server.disk.used} / ${metrics?.server.disk.total}` },
-            { title: 'Response Time', value: `${metrics?.response_time_ms || 0}ms`, icon: '⚡', subtitle: 'API response' },
+            { title: 'Waktu Respons', value: `${metrics?.response_time_ms || 0}ms`, icon: '⚡', subtitle: 'Respon API' },
           ].map((card, i) => (
             <div key={card.title} className={`card-luxury p-5 animate-fade-in-up stagger-${i + 1}`}>
               <div className="flex items-start justify-between">
@@ -196,7 +196,7 @@ export default function PerformanceDashboard() {
 
         {/* Circular Gauges */}
         <div className="card-luxury p-6 animate-fade-in-up stagger-5">
-          <h2 className="text-base font-semibold text-text-primary mb-6">System Resources</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-6">Sumber Daya Sistem</h2>
           <div className="flex justify-around flex-wrap gap-8">
             <CircularProgress value={metrics?.server.cpu_usage || 0} label="CPU" color={getBarColor(metrics?.server.cpu_usage || 0, { warning: 70, critical: 90 })} />
             <CircularProgress value={metrics?.server.memory.percentage || 0} label="Memory" color={getBarColor(metrics?.server.memory.percentage || 0, { warning: 70, critical: 85 })} />
@@ -211,11 +211,11 @@ export default function PerformanceDashboard() {
             <h2 className="text-base font-semibold text-text-primary mb-4">🖥️ Server</h2>
             <div className="space-y-0">
               {[
-                { label: 'PHP Version', value: metrics?.server.php_version },
+                { label: 'Versi PHP', value: metrics?.server.php_version },
                 { label: 'Laravel', value: metrics?.server.laravel_version },
-                { label: 'Environment', value: metrics?.server.environment },
-                { label: 'PHP Limit', value: metrics?.server.memory.php_limit },
-                { label: 'Disk Free', value: metrics?.server.disk.free },
+                { label: 'Lingkungan', value: metrics?.server.environment },
+                { label: 'Batas PHP', value: metrics?.server.memory.php_limit },
+                { label: 'Ruang Disk', value: metrics?.server.disk.free },
               ].map((item, i) => (
                 <div key={item.label} className={`flex justify-between py-3 ${i < 4 ? 'border-b border-border/30' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
@@ -231,10 +231,10 @@ export default function PerformanceDashboard() {
             <div className="space-y-0">
               {[
                 { label: 'Driver', value: metrics?.database.driver?.toUpperCase() },
-                { label: 'Name', value: metrics?.database.database },
-                { label: 'Query Time', value: `${metrics?.database.query_time_ms}ms` },
-                { label: 'Tables', value: metrics?.database.table_count },
-                { label: 'Size', value: metrics?.database.size },
+                { label: 'Nama', value: metrics?.database.database },
+                { label: 'Waktu Kueri', value: `${metrics?.database.query_time_ms}ms` },
+                { label: 'Tabel', value: metrics?.database.table_count },
+                { label: 'Ukuran', value: metrics?.database.size },
               ].map((item, i) => (
                 <div key={item.label} className={`flex justify-between py-3 ${i < 4 ? 'border-b border-border/30' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
@@ -246,13 +246,13 @@ export default function PerformanceDashboard() {
 
           {/* Application */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-6">
-            <h2 className="text-base font-semibold text-text-primary mb-4">📊 Application</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-4">📊 Aplikasi</h2>
             <div className="space-y-0">
               {[
-                { label: 'Total Requests', value: metrics?.application.requests.total.toLocaleString() },
-                { label: 'Error Rate', value: `${metrics?.application.requests.error_rate}%` },
-                { label: 'Avg Response', value: `${metrics?.application.response_time.average_ms}ms` },
-                { label: 'Active Users', value: metrics?.application.active_users },
+                { label: 'Total Permintaan', value: metrics?.application.requests.total.toLocaleString() },
+                { label: 'Tingkat Kesalahan', value: `${metrics?.application.requests.error_rate}%` },
+                { label: 'Rata-rata Respons', value: `${metrics?.application.response_time.average_ms}ms` },
+                { label: 'Pengguna Aktif', value: metrics?.application.active_users },
               ].map((item, i) => (
                 <div key={item.label} className={`flex justify-between py-3 ${i < 3 ? 'border-b border-border/30' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
@@ -264,15 +264,14 @@ export default function PerformanceDashboard() {
 
           {/* Process */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-7">
-            <h2 className="text-base font-semibold text-text-primary mb-4">⚙️ Process</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-4">⚙️ Proses</h2>
             <div className="space-y-0">
               {[
                 { label: 'PID', value: metrics?.application.process.pid },
                 { label: 'Memory Peak', value: metrics?.application.process.memory_peak },
-                { label: 'Response Time', value: `${metrics?.response_time_ms}ms` },
-                { label: 'Timestamp', value: new Date(metrics?.timestamp || '').toLocaleString() },
+                { label: 'Database', value: metrics?.database.status },
               ].map((item, i) => (
-                <div key={item.label} className={`flex justify-between py-3 ${i < 3 ? 'border-b border-border/30' : ''}`}>
+                <div key={item.label} className={`flex justify-between py-3 ${i < 2 ? 'border-b border-border/30' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
                   <span className="text-text-primary text-sm font-medium">{item.value}</span>
                 </div>

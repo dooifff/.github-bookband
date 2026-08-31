@@ -1,7 +1,7 @@
 import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 
 // Base API URL - in dev mode, requests go through Vite proxy to avoid CORS
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 const api = axios.create({
   baseURL: API_BASE_URL,

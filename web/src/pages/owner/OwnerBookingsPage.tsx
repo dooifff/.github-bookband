@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -25,19 +25,16 @@ export default function OwnerBookingsPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => { fetchStudios() }, [])
-  useEffect(() => { fetchBookings() }, [page, statusFilter, studioFilter])
-
-  const fetchStudios = async () => {
+  const fetchStudios = useCallback(async () => {
     try {
       const response = await api.get('/owner/studios')
       setStudios(response.data.data.data || [])
     } catch (error) {
       console.error('Failed to fetch studios:', error)
     }
-  }
+  }, [])
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -52,7 +49,10 @@ export default function OwnerBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [page, statusFilter, studioFilter])
+
+  useEffect(() => { fetchStudios() }, [fetchStudios])
+  useEffect(() => { fetchBookings() }, [fetchBookings])
 
   const handleConfirmBooking = async (bookingId: number) => {
     try { await api.post(`/owner/bookings/${bookingId}/confirm`); fetchBookings() } catch (error) { console.error('Failed to confirm booking:', error) }
@@ -83,8 +83,8 @@ export default function OwnerBookingsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Bookings</h1>
-          <p className="text-text-secondary mt-1 text-sm">Manage your studio bookings</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Pemesanan</h1>
+          <p className="text-text-secondary mt-1 text-sm">Kelola pemesanan studio Anda</p>
         </div>
 
         {/* Filters */}
@@ -95,19 +95,19 @@ export default function OwnerBookingsPage() {
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
               className="select-luxury text-sm"
             >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">Semua Status</option>
+              <option value="pending">Menunggu</option>
+              <option value="confirmed">Dikonfirmasi</option>
+              <option value="ongoing">Berlangsung</option>
+              <option value="completed">Selesai</option>
+              <option value="cancelled">Dibatalkan</option>
             </select>
             <select
               value={studioFilter}
               onChange={(e) => { setStudioFilter(e.target.value); setPage(1) }}
               className="select-luxury text-sm"
             >
-              <option value="">All Studios</option>
+              <option value="">Semua Studio</option>
               {studios.map((studio) => (
                 <option key={studio.id} value={studio.id}>{studio.name}</option>
               ))}
@@ -135,12 +135,12 @@ export default function OwnerBookingsPage() {
                   <tr><td colSpan={7} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-                      <p className="text-text-muted text-sm">Loading bookings...</p>
+                      <p className="text-text-muted text-sm">Memuat pemesanan...</p>
                     </div>
                   </td></tr>
                 ) : bookings.length === 0 ? (
                   <tr><td colSpan={7} className="px-6 py-16 text-center">
-                    <p className="text-text-muted text-sm">No bookings found</p>
+                    <p className="text-text-muted text-sm">Tidak ada pemesanan ditemukan</p>
                   </td></tr>
                 ) : (
                   bookings.map((booking) => (
@@ -167,10 +167,10 @@ export default function OwnerBookingsPage() {
                       <td>
                         <div className="flex items-center gap-2">
                           {booking.status === 'pending' && (
-                            <button onClick={() => handleConfirmBooking(booking.id)} className="btn-glass text-xs py-1.5 px-3">Confirm</button>
+                            <button onClick={() => handleConfirmBooking(booking.id)} className="btn-glass text-xs py-1.5 px-3">Konfirmasi</button>
                           )}
                           {booking.status === 'confirmed' && (
-                            <button onClick={() => handleCompleteBooking(booking.id)} className="btn-gold text-xs py-1.5 px-3">Complete</button>
+                            <button onClick={() => handleCompleteBooking(booking.id)} className="btn-gold text-xs py-1.5 px-3">Selesai</button>
                           )}
                         </div>
                       </td>
@@ -186,8 +186,8 @@ export default function OwnerBookingsPage() {
             <div className="px-6 py-4 border-t border-border/40 flex items-center justify-between">
               <p className="text-text-muted text-xs">Page {page} of {totalPages}</p>
               <div className="flex gap-2">
-                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Previous</button>
-                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Next</button>
+                <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Sebelumnya</button>
+                <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-glass text-xs py-1.5 px-3 disabled:opacity-30">Selanjutnya</button>
               </div>
             </div>
           )}

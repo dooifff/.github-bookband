@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -21,9 +21,7 @@ export default function CustomerBookingsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
 
-  useEffect(() => { fetchBookings() }, [filter])
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true)
       const params = filter ? `?status=${filter}` : ''
@@ -34,15 +32,17 @@ export default function CustomerBookingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filter])
+
+  useEffect(() => { fetchBookings() }, [fetchBookings])
 
   const handleCancel = async (id: number) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
+    if (!confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')) return
     try {
       await api.post(`/bookings/${id}/cancel`, { reason: 'Cancelled by customer' })
       fetchBookings()
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to cancel booking')
+      alert(error.response?.data?.message || 'Gagal membatalkan pemesanan')
     }
   }
 
@@ -59,9 +59,8 @@ export default function CustomerBookingsPage() {
   }
 
   const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'Pending', awaiting_payment: 'Awaiting Payment', confirmed: 'Confirmed',
-      ongoing: 'Ongoing', completed: 'Completed', cancelled: 'Cancelled',
+    const labels: Record<string, string> = {              pending: 'Menunggu', awaiting_payment: 'Menunggu Pembayaran', confirmed: 'Dikonfirmasi',
+      ongoing: 'Berlangsung', completed: 'Selesai', cancelled: 'Dibatalkan',
     }
     return labels[status] || status
   }
@@ -70,8 +69,8 @@ export default function CustomerBookingsPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">My Bookings</h1>
-          <p className="text-text-secondary mt-1 text-sm">View and manage your studio bookings</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Pemesanan Saya</h1>
+          <p className="text-text-secondary mt-1 text-sm">Lihat dan kelola pemesanan studio Anda</p>
         </div>
 
         {/* Filters */}
@@ -86,7 +85,7 @@ export default function CustomerBookingsPage() {
                   : 'bg-surface-light border border-border text-text-secondary hover:text-text-primary hover:border-border-light'
               }`}
             >
-              {f ? getStatusLabel(f) : 'All'}
+              {f ? getStatusLabel(f) : 'Semua'}
             </button>
           ))}
         </div>
@@ -96,15 +95,15 @@ export default function CustomerBookingsPage() {
           <div className="flex items-center justify-center h-32">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-              <p className="text-text-muted text-sm">Loading bookings...</p>
+              <p className="text-text-muted text-sm">Memuat pemesanan...</p>
             </div>
           </div>
         ) : bookings.length === 0 ? (
           <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">📅</span>
-            <p className="text-text-muted text-lg">No bookings found</p>
+            <p className="text-text-muted text-lg">Tidak ada pemesanan ditemukan</p>
             <a href="/customer/studios" className="text-accent text-sm hover:text-accent-hover mt-2 inline-block transition-colors">
-              Browse studios to make a booking →
+              Jelajahi studio untuk membuat pemesanan →
             </a>
           </div>
         ) : (
@@ -132,12 +131,28 @@ export default function CustomerBookingsPage() {
                   </div>
                   <div className="text-right ml-4">
                     <p className="text-xl font-bold gold-text-static">{booking.pricing?.formatted_total}</p>
-                    {['pending', 'awaiting_payment'].includes(booking.status) && (
+                    {booking.status === 'awaiting_payment' && (
+                      <div className="mt-3 space-y-2">
+                        <a
+                          href={`/customer/payment/${booking.booking_code}`}
+                          className="block px-3 py-1.5 text-xs font-medium bg-accent/10 text-accent border border-accent/20 rounded-lg hover:bg-accent/15 transition-colors text-center"
+                        >
+                          💳 Bayar Sekarang
+                        </a>
+                        <button
+                          onClick={() => handleCancel(booking.id)}
+                          className="w-full px-3 py-1.5 text-xs font-medium bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger/15 transition-colors"
+                        >
+                          Batalkan
+                        </button>
+                      </div>
+                    )}
+                    {booking.status === 'pending' && (
                       <button
                         onClick={() => handleCancel(booking.id)}
                         className="mt-3 px-3 py-1.5 text-xs font-medium bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger/15 transition-colors"
                       >
-                        Cancel
+                        Batalkan
                       </button>
                     )}
                   </div>

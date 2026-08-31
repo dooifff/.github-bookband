@@ -6,16 +6,40 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Midtrans\Config;
+use Midtrans\Snap;
 use InvalidArgumentException;
 
 class PaymentService
 {
+    public function __construct()
+    {
+        $this->configureMidtrans();
+    }
+
     /**
-     * Create a payment for a booking
-     * 
-     * Payment gateway abstraction - supports Midtrans and Xendit
+     * Configure Midtrans settings
+     */
+    private function configureMidtrans(): void
+    {
+        \Midtrans\Config::$serverKey = config('payment.midtrans.server_key', '');
+        \Midtrans\Config::$clientKey = config('payment.midtrans.client_key', '');
+        \Midtrans\Config::$isProduction = config('payment.midtrans.is_production', false);
+        \Midtrans\Config::$isSanitized = true;
+        \Midtrans\Config::$is3ds = true;
+        \Midtrans\Config::$curlOptions = [
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_HTTPHEADER => [],
+        ];
+    }
+
+    /**
+     * Create a payment for a booking using Midtrans Snap
+     *
+     * @throws InvalidArgumentException
      */
     public function createPayment(Booking $booking, string $method, ?string $provider = null): Payment
     {
@@ -24,27 +48,34 @@ class PaymentService
             throw new InvalidArgumentException('Booking tidak dalam status yang valid untuk pembayaran');
         }
 
-        // Check if payment already exists
-        if ($booking->payment && $booking->payment->status !== 'failed') {
-            throw new InvalidArgumentException('Booking sudah memiliki pembayaran aktif');
+        // Check if payment already exists and is still active
+        if ($booking->payment && in_array($booking->payment->status, ['pending'])) {
+            // Return existing payment if still pending
+            return $booking->payment;
         }
 
-        // Default to midtrans if not specified
-        $provider = $provider ?? config('payment.default_provider', 'midtrans');
+        return DB::transaction(function () use ($booking, $method) {
+            // Load relationships
+            $booking->load(['studio', 'room', 'user']);
 
-        return DB::transaction(function () use ($booking, $method, $provider) {
             // Generate payment code
             $paymentCode = $this->generatePaymentCode();
 
+            // Calculate amount from room price and duration to match Midtrans gross_amount
+            $pricePerHour = (int) $booking->room->price_per_hour;
+            $duration = max(1, (int) ceil($booking->duration_hours));
+            $amount = $pricePerHour * $duration;
+
             // Create payment record
             $payment = Payment::create([
+                'user_id' => $booking->user_id,
                 'booking_id' => $booking->id,
                 'payment_code' => $paymentCode,
-                'amount' => $booking->total,
-                'method' => $method,
-                'provider' => $provider,
+                'amount' => $amount,
+                'payment_method' => $method,
+                'provider' => 'midtrans',
                 'status' => 'pending',
-                'expires_at' => now()->addHours(24), // 24 hours to complete payment
+                'expired_at' => now()->addHours(24),
             ]);
 
             // Update booking status
@@ -52,14 +83,41 @@ class PaymentService
                 'status' => 'awaiting_payment',
             ]);
 
-            // Initialize payment with provider
-            $providerResponse = $this->initializeProviderPayment($payment, $booking, $provider);
+            // Build Midtrans transaction payload
+            $transactionData = $this->buildTransactionData($payment, $booking);
 
-            if ($providerResponse['success']) {
-                $payment->update([
-                    'provider_reference' => $providerResponse['reference'] ?? null,
-                    'provider_response' => $providerResponse,
+            try {
+                Log::info('Midtrans Snap request', [
+                    'payment_code' => $paymentCode,
+                    'payload' => $transactionData,
                 ]);
+
+                // Get Snap token from Midtrans
+                $snapResponse = Snap::createTransaction($transactionData);
+
+                Log::info('Midtrans Snap response', [
+                    'payment_code' => $paymentCode,
+                    'response' => (array) $snapResponse,
+                ]);
+
+                $payment->update([
+                    'provider_reference' => $snapResponse->token,
+                    'payment_url' => $snapResponse->redirect_url,
+                    'raw_response' => (array) $snapResponse,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Midtrans Snap error', [
+                    'payment_code' => $paymentCode,
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                $payment->update([
+                    'status' => 'failed',
+                    'raw_response' => ['error' => $e->getMessage()],
+                ]);
+
+                throw new InvalidArgumentException('Gagal membuat pembayaran Midtrans: ' . $e->getMessage());
             }
 
             return $payment->fresh();
@@ -67,142 +125,101 @@ class PaymentService
     }
 
     /**
-     * Initialize payment with the selected provider
+     * Build Midtrans transaction data
      */
-    private function initializeProviderPayment(Payment $payment, Booking $booking, string $provider): array
+    private function buildTransactionData(Payment $payment, Booking $booking): array
     {
-        // This is where you would integrate with actual payment providers
-        // For now, we'll return a mock response
-        
-        return match($provider) {
-            'midtrans' => $this->initializeMidtrans($payment, $booking),
-            'xendit' => $this->initializeXendit($payment, $booking),
-            default => throw new InvalidArgumentException('Payment provider tidak didukung'),
-        };
-    }
+        $orderId = $payment->payment_code;
+        $pricePerHour = (int) $booking->room->price_per_hour;
+        $duration = max(1, (int) ceil($booking->duration_hours));
 
-    /**
-     * Initialize Midtrans payment
-     */
-    private function initializeMidtrans(Payment $payment, Booking $booking): array
-    {
-        // Midtrans integration
-        // In production, this would call Midtrans API
-        $serverKey = config('payment.midtrans.server_key');
-        $isProduction = config('payment.midtrans.is_production', false);
-        
-        $baseUrl = $isProduction 
-            ? 'https://app.midtrans.com/snap/v1' 
-            : 'https://app.sandbox.midtrans.com/snap/v1';
+        // gross_amount MUST equal sum of (price * quantity) in item_details
+        $grossAmount = $pricePerHour * $duration;
 
-        // Create transaction
-        $transactionData = [
+        return [
             'transaction_details' => [
-                'order_id' => $payment->payment_code,
-                'gross_amount' => (int) $payment->amount,
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
             ],
+            'item_details' => [[
+                'id' => (string) $booking->room_id,
+                'price' => $pricePerHour,
+                'quantity' => $duration,
+                'name' => substr("{$booking->room->name} - {$booking->date}", 0, 50),
+            ]],
             'customer_details' => [
-                'first_name' => $booking->user->name,
-                'email' => $booking->user->email,
-                'phone' => $booking->user->phone,
-            ],
-            'item_details' => [
-                [
-                    'id' => $booking->room_id,
-                    'price' => (int) $booking->room->price_per_hour,
-                    'quantity' => (int) $booking->duration_hours,
-                    'name' => "{$booking->room->name} - {$booking->date}",
-                ],
+                'first_name' => $booking->user->name ?? 'Customer',
+                'email' => $booking->user->email ?? '',
+                'phone' => $booking->user->phone ?? '08123456789',
             ],
             'callbacks' => [
-                'finish' => config('app.url') . '/payment/finish',
+                'finish' => config('app.url') . '/customer/bookings',
             ],
-        ];
-
-        // In production, make actual API call:
-        // $response = Http::withBasicAuth($serverKey, '')
-        //     ->post("{$baseUrl}/transactions", $transactionData);
-        
-        // Mock response for development
-        return [
-            'success' => true,
-            'reference' => 'MID-' . Str::random(10),
-            'snap_token' => 'mock-snap-token-' . Str::random(20),
-            'redirect_url' => config('app.url') . '/payment/mock',
         ];
     }
 
     /**
-     * Initialize Xendit payment
+     * Handle Midtrans notification webhook
+     *
+     * @throws InvalidArgumentException
      */
-    private function initializeXendit(Payment $payment, Booking $booking): array
+    public function handleMidtransNotification(array $payload): Payment
     {
-        // Xendit integration
-        $secretKey = config('payment.xendit.secret_key');
-        
-        // In production, this would call Xendit API
-        $transactionData = [
-            'external_id' => $payment->payment_code,
-            'amount' => (int) $payment->amount,
-            'description' => "StudioBook Booking - {$booking->room->name}",
-            'invoice_duration' => 86400, // 24 hours
-            'customer' => [
-                'given_names' => $booking->user->name,
-                'email' => $booking->user->email,
-                'mobile_number' => $booking->user->phone,
-            ],
-            'success_redirect_url' => config('app.url') . '/payment/success',
-            'failure_redirect_url' => config('app.url') . '/payment/failed',
-        ];
+        $transactionId = $payload['transaction_id'] ?? '';
+        $orderId = $payload['order_id'] ?? '';
+        $statusCode = $payload['status_code'] ?? '';
+        $grossAmount = $payload['gross_amount'] ?? '';
+        $fraudStatus = $payload['fraud_status'] ?? '';
+        $transactionStatus = $payload['transaction_status'] ?? '';
 
-        // In production, make actual API call:
-        // $response = Http::withToken($secretKey)
-        //     ->post('https://api.xendit.co/v2/invoices', $transactionData);
-        
-        // Mock response for development
-        return [
-            'success' => true,
-            'reference' => 'XEN-' . Str::random(10),
-            'invoice_id' => 'mock-invoice-' . Str::random(15),
-            'invoice_url' => config('app.url') . '/payment/mock',
-        ];
-    }
-
-    /**
-     * Handle payment webhook from provider
-     */
-    public function handleWebhook(string $provider, array $payload): Payment
-    {
-        // Validate webhook signature
-        if (!$this->validateWebhookSignature($provider, $payload)) {
-            throw new InvalidArgumentException('Invalid webhook signature');
-        }
-
-        $paymentCode = $this->extractPaymentCode($provider, $payload);
-        
-        $payment = Payment::where('payment_code', $paymentCode)
+        // Find payment
+        $payment = Payment::where('payment_code', $orderId)
             ->with('booking')
             ->first();
 
         if (!$payment) {
-            throw new InvalidArgumentException('Payment tidak ditemukan');
+            throw new InvalidArgumentException("Payment not found for order: {$orderId}");
         }
 
-        $status = $this->mapProviderStatus($provider, $payload['transaction_status'] ?? $payload['status'] ?? '');
+        // Verify signature
+        $signatureKey = hash('sha512',
+            $orderId .
+            $statusCode .
+            $grossAmount .
+            config('payment.midtrans.server_key', '')
+        );
+
+        if ($signatureKey !== ($payload['signature_key'] ?? '')) {
+            Log::warning('Midtrans signature mismatch', ['order_id' => $orderId]);
+            throw new InvalidArgumentException('Invalid signature');
+        }
+
+        // Map Midtrans status to our status
+        $status = $this->mapMidtransStatus($transactionStatus, $fraudStatus);
+
+        Log::info('Midtrans notification received', [
+            'order_id' => $orderId,
+            'transaction_status' => $transactionStatus,
+            'fraud_status' => $fraudStatus,
+            'mapped_status' => $status,
+        ]);
 
         return DB::transaction(function () use ($payment, $status, $payload) {
-            // Update payment status
+            // Update payment
             $payment->update([
                 'status' => $status,
-                'provider_response' => $payload,
-                'paid_at' => $status === 'paid' ? now() : null,
+                'provider_reference' => $payload['transaction_id'] ?? $payment->provider_reference,
+                'payment_type' => $payload['payment_type'] ?? null,
+                'raw_response' => $payload,
+                'paid_at' => in_array($status, ['paid']) ? now() : $payment->paid_at,
             ]);
 
-            // Update booking status based on payment status
+            // Update booking status
             $bookingStatus = match($status) {
                 'paid' => 'paid',
                 'failed' => 'failed',
                 'expired' => 'expired',
+                'cancelled' => 'cancelled',
                 'refunded' => 'refunded',
                 default => $payment->booking->status,
             };
@@ -211,55 +228,98 @@ class PaymentService
                 'status' => $bookingStatus,
             ]);
 
+            // Send notification to user
+            $this->sendPaymentNotification($payment, $status);
+
             return $payment->fresh();
         });
     }
 
     /**
-     * Validate webhook signature
+     * Map Midtrans transaction status to our internal status
      */
-    private function validateWebhookSignature(string $provider, array $payload): bool
+    private function mapMidtransStatus(string $transactionStatus, ?string $fraudStatus): string
     {
-        // Implement actual signature validation for each provider
-        return true; // Mock validation for development
-    }
+        // If fraud is challenge, treat as pending
+        if ($fraudStatus === 'challenge') {
+            return 'pending';
+        }
 
-    /**
-     * Extract payment code from webhook payload
-     */
-    private function extractPaymentCode(string $provider, array $payload): string
-    {
-        return match($provider) {
-            'midtrans' => $payload['order_id'] ?? '',
-            'xendit' => $payload['external_id'] ?? '',
-            default => '',
-        };
-    }
-
-    /**
-     * Map provider status to our status
-     */
-    private function mapProviderStatus(string $provider, string $status): string
-    {
-        return match($provider) {
-            'midtrans' => match($status) {
-                'capture' => 'paid',
-                'settlement' => 'paid',
-                'pending' => 'pending',
-                'deny' => 'failed',
-                'expire' => 'expired',
-                'cancel' => 'cancelled',
-                'refund' => 'refunded',
-                default => 'pending',
-            },
-            'xendit' => match($status) {
-                'PAID' => 'paid',
-                'EXPIRED' => 'expired',
-                'PENDING' => 'pending',
-                default => 'pending',
-            },
+        return match($transactionStatus) {
+            'capture' => $fraudStatus === 'accept' ? 'paid' : 'pending',
+            'settlement' => 'paid',
+            'pending' => 'pending',
+            'deny' => 'failed',
+            'expire' => 'expired',
+            'cancel' => 'cancelled',
+            'refund' => 'refunded',
+            'partial_refund' => 'refunded',
             default => 'pending',
         };
+    }
+
+    /**
+     * Send notification to user about payment status
+     */
+    private function sendPaymentNotification(Payment $payment, string $status): void
+    {
+        try {
+            $booking = $payment->booking;
+
+            $title = match($status) {
+                'paid' => 'Pembayaran Berhasil',
+                'failed' => 'Pembayaran Gagal',
+                'expired' => 'Pembayaran Kedaluwarsa',
+                'cancelled' => 'Pembayaran Dibatalkan',
+                default => null,
+            };
+
+            if (!$title) return;
+
+            $body = match($status) {
+                'paid' => "Pembayaran untuk booking {$booking->booking_code} telah berhasil. Total: {$payment->formatted_amount}",
+                'failed' => "Pembayaran untuk booking {$booking->booking_code} gagal. Silakan coba lagi.",
+                'expired' => "Pembayaran untuk booking {$booking->booking_code} telah kedaluwarsa.",
+                'cancelled' => "Pembayaran untuk booking {$booking->booking_code} telah dibatalkan.",
+                default => '',
+            };
+
+            \App\Models\Notification::create([
+                'user_id' => $booking->user_id,
+                'type' => 'payment',
+                'title' => $title,
+                'body' => $body,
+                'data' => [
+                    'booking_id' => $booking->id,
+                    'booking_code' => $booking->booking_code,
+                    'payment_code' => $payment->payment_code,
+                    'status' => $status,
+                    'amount' => $payment->amount,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send payment notification', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Get payment status from Midtrans
+     */
+    public function checkPaymentStatus(Payment $payment): string
+    {
+        try {
+            $status = Snap::getPaymentStatus($payment->payment_code);
+            return $status->transaction_status ?? 'pending';
+        } catch (\Exception $e) {
+            Log::error('Failed to check Midtrans status', [
+                'payment_code' => $payment->payment_code,
+                'error' => $e->getMessage(),
+            ]);
+            return 'pending';
+        }
     }
 
     /**
@@ -267,10 +327,10 @@ class PaymentService
      */
     private function generatePaymentCode(): string
     {
-        $prefix = 'PAY';
+        $prefix = 'SB';
         $date = now()->format('ymd');
         $random = strtoupper(substr(uniqid(), -6));
-        
+
         return "{$prefix}{$date}{$random}";
     }
 
@@ -300,26 +360,23 @@ class PaymentService
      */
     public function isPaymentExpired(Payment $payment): bool
     {
-        return $payment->expires_at && $payment->expires_at->isPast() && $payment->status === 'pending';
+        return $payment->expired_at && $payment->expired_at->isPast() && $payment->status === 'pending';
     }
 
     /**
-     * Expire old pending payments
-     * Should be run via Laravel Scheduler
+     * Expire old pending payments (run via scheduler)
      */
     public function expireOldPayments(): int
     {
-        $expiredCount = Payment::where('status', 'pending')
-            ->where('expires_at', '<', now())
-            ->update(['status' => 'expired']);
+        $expiredPayments = Payment::where('status', 'pending')
+            ->where('expired_at', '<', now())
+            ->get();
 
-        // Also update associated bookings
-        Payment::where('status', 'expired')
-            ->whereNotNull('booking_id')
-            ->each(function ($payment) {
-                $payment->booking->update(['status' => 'expired']);
-            });
+        foreach ($expiredPayments as $payment) {
+            $payment->update(['status' => 'expired']);
+            $payment->booking->update(['status' => 'expired']);
+        }
 
-        return $expiredCount;
+        return $expiredPayments->count();
     }
 }

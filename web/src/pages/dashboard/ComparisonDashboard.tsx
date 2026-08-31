@@ -61,7 +61,7 @@ export default function ComparisonDashboard() {
       document.body.appendChild(link)
       link.click()
       link.remove()
-    } catch (err) { console.error('Failed to export:', err) }
+    } catch { console.error('Failed to export') }
   }
 
   const sendEmailReport = async () => {
@@ -70,7 +70,7 @@ export default function ComparisonDashboard() {
     try {
       await api.post('/admin/performance/email/send', { recipient: email, period1_start: period1Start, period1_end: period1End, period2_start: period2Start, period2_end: period2End, attach_pdf: true })
       alert('Report sent successfully!')
-    } catch (err) { alert('Failed to send report') }
+    } catch { alert('Failed to send report') }
   }
 
   const getChangeColor = (change: MetricComparison['change']) => {
@@ -98,7 +98,7 @@ export default function ComparisonDashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-            <p className="text-text-muted text-sm">Loading comparison data...</p>
+            <p className="text-text-muted text-sm">Memuat data perbandingan...</p>
           </div>
         </div>
       </AdminLayout>
@@ -111,8 +111,8 @@ export default function ComparisonDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Performance Comparison</h1>
-            <p className="text-text-secondary mt-1 text-sm">Compare performance metrics across time periods</p>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Perbandingan Performa</h1>
+            <p className="text-text-secondary mt-1 text-sm">Bandingkan metrik performa di berbagai periode waktu</p>
           </div>
           <div className="flex items-center gap-2">
             {[
@@ -128,26 +128,24 @@ export default function ComparisonDashboard() {
 
         {/* Date Selection */}
         <div className="card-luxury p-6 animate-fade-in-up stagger-1">
-          <h2 className="text-base font-semibold text-text-primary mb-4">📅 Select Time Periods</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-4">📅 Pilih Periode Waktu</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 rounded-xl bg-surface-light/50 border border-border/30">
-              <h3 className="text-text-primary text-sm font-medium mb-3">Period 1 (Recent)</h3>
+              <h3 className="text-text-primary text-sm font-medium mb-3">Periode 1 (Terbaru)</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-text-muted text-xs">Start</label><input type="date" value={period1Start} onChange={(e) => setPeriod1Start(e.target.value)} className="input-luxury w-full mt-1 text-sm" /></div>
                 <div><label className="text-text-muted text-xs">End</label><input type="date" value={period1End} onChange={(e) => setPeriod1End(e.target.value)} className="input-luxury w-full mt-1 text-sm" /></div>
               </div>
             </div>
             <div className="p-4 rounded-xl bg-surface-light/50 border border-border/30">
-              <h3 className="text-text-primary text-sm font-medium mb-3">Period 2 (Previous)</h3>
+              <h3 className="text-text-primary text-sm font-medium mb-3">Periode 2 (Sebelumnya)</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-text-muted text-xs">Start</label><input type="date" value={period2Start} onChange={(e) => setPeriod2Start(e.target.value)} className="input-luxury w-full mt-1 text-sm" /></div>
                 <div><label className="text-text-muted text-xs">End</label><input type="date" value={period2End} onChange={(e) => setPeriod2End(e.target.value)} className="input-luxury w-full mt-1 text-sm" /></div>
               </div>
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
-            <button onClick={fetchComparison} className="btn-gold text-sm">🔄 Compare Periods</button>
-          </div>
+          <div className="mt-4 flex justify-end"><button onClick={fetchComparison} className="btn-gold text-sm">🔄 Bandingkan Periode</button></div>
         </div>
 
         {error && <div className="p-4 bg-danger/8 border border-danger/20 rounded-xl text-danger text-sm">{error}</div>}
@@ -229,7 +227,7 @@ export default function ComparisonDashboard() {
                           </div>
                           <p className="text-text-muted text-[0.65rem] mt-2">{data.length} data points</p>
                         </>
-                      ) : <p className="text-text-muted text-sm">No data available</p>}
+                      ) : <p className="text-text-muted text-sm">Tidak ada data tersedia</p>}
                     </div>
                   ))}
                 </div>

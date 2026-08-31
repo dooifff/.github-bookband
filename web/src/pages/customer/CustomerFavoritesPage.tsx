@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -16,9 +16,7 @@ export default function CustomerFavoritesPage() {
   const [favorites, setFavorites] = useState<Favorite[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchFavorites() }, [])
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     try {
       const response = await api.get('/favorites')
       setFavorites(response.data.data || [])
@@ -27,7 +25,9 @@ export default function CustomerFavoritesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchFavorites() }, [fetchFavorites])
 
   const handleRemove = async (studioId: number) => {
     try {
@@ -42,23 +42,23 @@ export default function CustomerFavoritesPage() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">My Favorites</h1>
-          <p className="text-text-secondary mt-1 text-sm">Studios you've saved</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Favorit Saya</h1>
+          <p className="text-text-secondary mt-1 text-sm">Studio yang Anda simpan</p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-              <p className="text-text-muted text-sm">Loading favorites...</p>
+              <p className="text-text-muted text-sm">Memuat favorit...</p>
             </div>
           </div>
         ) : favorites.length === 0 ? (
           <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">❤️</span>
-            <p className="text-text-muted text-lg">No favorites yet</p>
+            <p className="text-text-muted text-lg">Belum ada favorit</p>
             <a href="/customer/studios" className="text-accent text-sm hover:text-accent-hover mt-2 inline-block transition-colors">
-              Browse studios to add favorites →
+              Jelajahi studio untuk menambahkan favorit →
             </a>
           </div>
         ) : (
@@ -86,11 +86,11 @@ export default function CustomerFavoritesPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-gold text-xs py-1 px-3"
-                    >View</a>
+                    >Lihat</a>
                     <button
                       onClick={() => handleRemove(fav.id)}
                       className="px-3 py-1 text-xs font-medium bg-danger/10 text-danger border border-danger/20 rounded-lg hover:bg-danger/15 transition-colors"
-                    >Remove</button>
+                    >Hapus</button>
                   </div>
                 </div>
               </div>

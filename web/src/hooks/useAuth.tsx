@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react'
 import api from '../services/api'
 
 interface User {
@@ -28,7 +28,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const loadingRef = useRef(true)
   const [loading, setLoading] = useState(true)
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const response = await api.get('/auth/me')
+      const userData = response.data.data
+      setUser(userData)
+      localStorage.setItem('user', JSON.stringify(userData))
+    } catch (error) {
+      console.error('Failed to fetch user:', error)
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      setToken(null)
+      setUser(null)
+      delete api.defaults.headers.common['Authorization']
+    } finally {
+      setLoading(false)
+      loadingRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (token) {
@@ -36,26 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fetchUser()
     } else {
       setLoading(false)
+      loadingRef.current = false
     }
-  }, [token])
-
-  const fetchUser = async () => {
-    try {
-      // Backend returns: { success, message, data: UserResource }
-      const response = await api.get('/auth/me')
-      const userData = response.data.data
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
-    } catch (error) {
-      console.error('Failed to fetch user:', error)
-      logout()
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [token, fetchUser])
 
   const login = async (email: string, password: string) => {
-    // Backend returns: { success, message, data: { user: UserResource, token: string } }
     const response = await api.post('/auth/login', { email, password })
     const { user: userData, token: authToken } = response.data.data
 
@@ -66,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
   }
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       if (token) {
         await api.post('/auth/logout')
@@ -80,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       delete api.defaults.headers.common['Authorization']
     }
-  }
+  }, [token])
 
   const updateUser = (data: Partial<User>) => {
     setUser((prev) => {

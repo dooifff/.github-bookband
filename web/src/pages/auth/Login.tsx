@@ -45,15 +45,15 @@ export default function Login() {
             <span className="text-3xl">🎸</span>
           </div>
           <h1 className="text-4xl font-bold gold-text tracking-tight">StudioBook</h1>
-          <p className="text-text-secondary mt-2 text-sm tracking-wide">Premium Music Studio Booking Platform</p>
+          <p className="text-text-secondary mt-2 text-sm tracking-wide">Platform Pemesanan Studio Musik Premium</p>
         </div>
 
         {/* Login card */}
         <div className="glass-strong rounded-2xl p-8 luxury-shadow-lg animate-fade-in-up stagger-1">
           {/* Card header */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-text-primary">Welcome back</h2>
-            <p className="text-text-muted text-sm mt-1">Sign in to your account to continue</p>
+            <h2 className="text-xl font-semibold text-text-primary">Selamat Datang Kembali</h2>
+            <p className="text-text-muted text-sm mt-1">Masuk ke akun Anda untuk melanjutkan</p>
           </div>
 
           {/* Error */}
@@ -67,7 +67,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-text-secondary text-xs font-medium tracking-wide uppercase">Email Address</label>
+              <label className="text-text-secondary text-xs font-medium tracking-wide uppercase">Alamat Email</label>
               <input
                 type="email"
                 value={email}
@@ -80,7 +80,7 @@ export default function Login() {
 
             {/* Password */}
             <div className="space-y-1.5">
-              <label className="text-text-secondary text-xs font-medium tracking-wide uppercase">Password</label>
+              <label className="text-text-secondary text-xs font-medium tracking-wide uppercase">Kata Sandi</label>
               <input
                 type="password"
                 value={password}
@@ -101,10 +101,10 @@ export default function Login() {
                     <path d="M5 12l5 5L20 7" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
-                <span className="text-text-secondary text-sm group-hover:text-text-primary transition-colors">Remember me</span>
+                <span className="text-text-secondary text-sm group-hover:text-text-primary transition-colors">Ingat saya</span>
               </label>
               <a href="#" className="text-accent text-sm hover:text-accent-hover transition-colors">
-                Forgot password?
+                Lupa kata sandi?
               </a>
             </div>
 
@@ -120,9 +120,9 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Signing in...
+                  Memproses...
                 </span>
-              ) : 'Sign In'}
+              ) : 'Masuk'}
             </button>
           </form>
 
@@ -133,12 +133,12 @@ export default function Login() {
 
           {/* Demo accounts */}
           <div>
-            <p className="text-text-muted text-xs text-center mb-4 tracking-wide uppercase font-medium">Quick Access</p>
+            <p className="text-text-muted text-xs text-center mb-4 tracking-wide uppercase font-medium">Akses Cepat</p>
             <div className="space-y-2.5">
               {[
                 { email: 'admin@studiobook.com', role: 'Super Admin', color: 'text-accent' },
-                { email: 'owner@studiobook.com', role: 'Owner', color: 'text-success' },
-                { email: 'customer@studiobook.com', role: 'Customer', color: 'text-info' },
+                { email: 'owner@studiobook.com', role: 'Pemilik', color: 'text-success' },
+                { email: 'customer@studiobook.com', role: 'Pelanggan', color: 'text-info' },
               ].map((account) => (
                 <button
                   key={account.email}
@@ -149,14 +149,14 @@ export default function Login() {
                   <span className={`text-xs font-medium ${account.color}`}>{account.role}</span>
                 </button>
               ))}
-              <p className="text-text-muted text-center text-xs pt-1">Password: <span className="font-mono text-text-secondary">password</span></p>
+              <p className="text-text-muted text-center text-xs pt-1">Kata Sandi: <span className="font-mono text-text-secondary">password</span></p>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <p className="text-center text-text-muted text-xs mt-8 tracking-wide">
-          © 2025 StudioBook. Crafted with ♪
+          © 2025 StudioBook. Dibuat dengan ♪
         </p>
       </div>
     </div>

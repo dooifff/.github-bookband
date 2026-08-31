@@ -286,7 +286,7 @@ Route::prefix('v1/owner')->middleware(['auth:sanctum', 'role:owner,super_admin']
 
 // Payment Webhook Routes (no auth required - webhook from provider)
 Route::prefix('v1/payments/webhook')->group(function () {
-    Route::post('/midtrans', [PaymentController::class, 'webhook'])->name('payment.webhook.midtrans');
+    Route::post('/midtrans', [PaymentController::class, 'midtransNotification'])->name('payment.webhook.midtrans');
     Route::post('/xendit', [PaymentController::class, 'webhook'])->name('payment.webhook.xendit');
 });
 

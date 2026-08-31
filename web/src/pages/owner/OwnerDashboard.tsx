@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -19,9 +19,7 @@ export default function OwnerDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { fetchDashboard() }, [])
-
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       const response = await api.get('/owner/dashboard')
       setStats(response.data.data)
@@ -30,16 +28,18 @@ export default function OwnerDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchDashboard() }, [fetchDashboard])
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
 
   const statCards = [
-    { title: 'My Studios', value: stats?.total_studios || 0, icon: '🏠', iconBg: 'bg-blue-500/10' },
-    { title: 'Total Bookings', value: stats?.total_bookings || 0, icon: '📅', iconBg: 'bg-purple-500/10' },
-    { title: 'Pending', value: stats?.pending_bookings || 0, icon: '⏳', iconBg: 'bg-warning/10' },
-    { title: 'Total Revenue', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', iconBg: 'bg-success/10' },
+    { title: 'Studio Saya', value: stats?.total_studios || 0, icon: '🏠', iconBg: 'bg-blue-500/10' },
+    { title: 'Total Pemesanan', value: stats?.total_bookings || 0, icon: '📅', iconBg: 'bg-purple-500/10' },
+    { title: 'Menunggu', value: stats?.pending_bookings || 0, icon: '⏳', iconBg: 'bg-warning/10' },
+    { title: 'Total Pendapatan', value: formatCurrency(stats?.total_revenue || 0), icon: '💰', iconBg: 'bg-success/10' },
   ]
 
   if (loading) {
@@ -60,8 +60,8 @@ export default function OwnerDashboard() {
       <div className="space-y-8">
         {/* Header */}
         <div className="animate-fade-in-up">
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Owner Dashboard</h1>
-          <p className="text-text-secondary mt-1 text-sm">Manage your studios and track performance</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dasbor Pemilik</h1>
+          <p className="text-text-secondary mt-1 text-sm">Kelola studio Anda dan pantau performa</p>
         </div>
 
         {/* Stats */}
@@ -86,8 +86,8 @@ export default function OwnerDashboard() {
           {/* Today's Bookings */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-5">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Today's Bookings</h2>
-              <a href="/owner/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">View all →</a>
+              <h2 className="text-base font-semibold text-text-primary">Pemesanan Hari Ini</h2>
+              <a href="/owner/bookings" className="text-accent text-xs font-medium hover:text-accent-hover transition-colors">Lihat semua →</a>
             </div>
             <div className="space-y-1">
               {stats?.today_bookings?.slice(0, 5).map((booking) => (
@@ -109,7 +109,7 @@ export default function OwnerDashboard() {
                 </div>
               ))}
               {(!stats?.today_bookings || stats.today_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No bookings today</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada pemesanan hari ini</p>
               )}
             </div>
           </div>
@@ -117,7 +117,7 @@ export default function OwnerDashboard() {
           {/* Upcoming Bookings */}
           <div className="card-luxury p-6 animate-fade-in-up stagger-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-text-primary">Upcoming Bookings</h2>
+              <h2 className="text-base font-semibold text-text-primary">Pemesanan Mendatang</h2>
             </div>
             <div className="space-y-1">
               {stats?.upcoming_bookings?.slice(0, 5).map((booking) => (
@@ -140,7 +140,7 @@ export default function OwnerDashboard() {
                 </div>
               ))}
               {(!stats?.upcoming_bookings || stats.upcoming_bookings.length === 0) && (
-                <p className="text-text-muted text-center py-8 text-sm">No upcoming bookings</p>
+                <p className="text-text-muted text-center py-8 text-sm">Tidak ada pemesanan mendatang</p>
               )}
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function OwnerDashboard() {
 
         {/* Recent Reviews */}
         <div className="card-luxury p-6 animate-fade-in-up stagger-7">
-          <h2 className="text-base font-semibold text-text-primary mb-5">Recent Reviews</h2>
+          <h2 className="text-base font-semibold text-text-primary mb-5">Ulasan Terbaru</h2>
           <div className="space-y-1">
             {stats?.recent_reviews?.slice(0, 3).map((review) => (
               <div key={review.id} className="py-4 px-4 -mx-4 rounded-xl hover:bg-surface-lighter/30 transition-colors">
@@ -171,7 +171,7 @@ export default function OwnerDashboard() {
               </div>
             ))}
             {(!stats?.recent_reviews || stats.recent_reviews.length === 0) && (
-              <p className="text-text-muted text-center py-8 text-sm">No reviews yet</p>
+              <p className="text-text-muted text-center py-8 text-sm">Belum ada ulasan</p>
             )}
           </div>
         </div>

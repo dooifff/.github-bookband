@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Payment;
 use App\Services\PaymentService;
 use App\Http\Resources\PaymentResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -21,8 +23,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'booking_id' => 'required|exists:bookings,id',
-            'method' => 'required|in:bank_transfer,credit_card,debit_card,ewallet',
-            'provider' => 'nullable|in:midtrans,xendit',
+            'method' => 'required|in:bank_transfer,credit_card,debit_card,ewallet,gopay,shopeepay,qris',
         ]);
 
         $booking = Booking::where('id', $request->booking_id)
@@ -40,13 +41,20 @@ class PaymentController extends Controller
             $payment = $this->paymentService->createPayment(
                 $booking,
                 $request->method,
-                $request->provider
+                'midtrans'
             );
 
             return response()->json([
                 'success' => true,
                 'message' => 'Pembayaran berhasil dibuat',
-                'data' => new PaymentResource($payment),
+                'data' => [
+                    'payment_code' => $payment->payment_code,
+                    'amount' => $payment->amount,
+                    'status' => $payment->status,
+                    'payment_url' => $payment->payment_url,
+                    'snap_token' => $payment->provider_reference,
+                    'expired_at' => $payment->expired_at?->toISOString(),
+                ],
             ], 201);
         } catch (\InvalidArgumentException $e) {
             return response()->json([
@@ -59,9 +67,9 @@ class PaymentController extends Controller
     /**
      * Get payment details
      */
-    public function show(string $paymentCode): JsonResponse
+    public function show(Request $request, string $paymentCode): JsonResponse
     {
-        $payment = \App\Models\Payment::where('payment_code', $paymentCode)
+        $payment = Payment::where('payment_code', $paymentCode)
             ->with('booking')
             ->first();
 
@@ -73,8 +81,8 @@ class PaymentController extends Controller
         }
 
         // Check authorization
-        $user = $request()->user();
-        if ($payment->booking->user_id !== $user->id && 
+        $user = $request->user();
+        if ($payment->booking->user_id !== $user->id &&
             !in_array($user->role, ['admin', 'super_admin'])) {
             return response()->json([
                 'success' => false,
@@ -89,26 +97,54 @@ class PaymentController extends Controller
     }
 
     /**
-     * Handle payment webhook from provider
+     * Handle Midtrans notification webhook
      */
-    public function webhook(Request $request, string $provider): JsonResponse
+    public function midtransNotification(Request $request): JsonResponse
     {
         try {
-            $payment = $this->paymentService->handleWebhook(
-                $provider,
-                $request->all()
-            );
+            Log::info('Midtrans notification received', $request->all());
+
+            $payment = $this->paymentService->handleMidtransNotification($request->all());
 
             return response()->json([
                 'success' => true,
-                'message' => 'Webhook processed',
+                'message' => 'Notification processed',
             ]);
         } catch (\InvalidArgumentException $e) {
+            Log::error('Midtrans notification error', [
+                'error' => $e->getMessage(),
+                'payload' => $request->all(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
+        } catch (\Exception $e) {
+            Log::error('Midtrans notification unexpected error', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Internal server error',
+            ], 500);
         }
+    }
+
+    /**
+     * Handle payment webhook (legacy - for backward compatibility)
+     */
+    public function webhook(Request $request, string $provider): JsonResponse
+    {
+        if ($provider === 'midtrans') {
+            return $this->midtransNotification($request);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Unsupported provider',
+        ], 400);
     }
 
     /**
@@ -135,7 +171,7 @@ class PaymentController extends Controller
      */
     public function status(Request $request, string $paymentCode): JsonResponse
     {
-        $payment = \App\Models\Payment::where('payment_code', $paymentCode)
+        $payment = Payment::where('payment_code', $paymentCode)
             ->first();
 
         if (!$payment) {
@@ -147,7 +183,6 @@ class PaymentController extends Controller
 
         // Check if payment is expired
         if ($this->paymentService->isPaymentExpired($payment)) {
-            // Update status to expired
             $payment->update(['status' => 'expired']);
             $payment->booking->update(['status' => 'expired']);
         }
@@ -158,8 +193,9 @@ class PaymentController extends Controller
                 'payment_code' => $payment->payment_code,
                 'status' => $payment->status,
                 'amount' => $payment->amount,
+                'payment_url' => $payment->payment_url,
                 'paid_at' => $payment->paid_at?->toISOString(),
-                'expires_at' => $payment->expires_at?->toISOString(),
+                'expired_at' => $payment->expired_at?->toISOString(),
             ],
         ]);
     }

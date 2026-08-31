@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -17,9 +17,7 @@ export default function CustomerNotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
 
-  useEffect(() => { fetchNotifications() }, [])
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       const [notifRes, countRes] = await Promise.all([
         api.get('/notifications'),
@@ -32,7 +30,9 @@ export default function CustomerNotificationsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => { fetchNotifications() }, [fetchNotifications])
 
   const markAsRead = async (id: number) => {
     try {
@@ -70,12 +70,12 @@ export default function CustomerNotificationsPage() {
           <div>
             <h1 className="text-3xl font-bold text-text-primary tracking-tight">Notifications</h1>
             <p className="text-text-secondary mt-1 text-sm">
-              {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'All caught up!'}
+              {unreadCount > 0 ? `${unreadCount} notifikasi belum dibaca` : 'Semua sudah dibaca!'}
             </p>
           </div>
           {unreadCount > 0 && (
             <button onClick={markAllAsRead} className="btn-gold text-sm">
-              Mark all as read
+              Tandai semua sudah dibaca
             </button>
           )}
         </div>
@@ -84,13 +84,13 @@ export default function CustomerNotificationsPage() {
           <div className="flex items-center justify-center h-32">
             <div className="flex flex-col items-center gap-3">
               <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-              <p className="text-text-muted text-sm">Loading notifications...</p>
+              <p className="text-text-muted text-sm">Memuat notifikasi...</p>
             </div>
           </div>
         ) : notifications.length === 0 ? (
           <div className="card-luxury p-16 text-center animate-fade-in">
             <span className="text-4xl mb-4 block">🔔</span>
-            <p className="text-text-muted text-lg">No notifications</p>
+            <p className="text-text-muted text-lg">Tidak ada notifikasi</p>
           </div>
         ) : (
           <div className="space-y-2">

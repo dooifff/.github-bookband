@@ -16,6 +16,8 @@ import CustomerBookingsPage from './pages/customer/CustomerBookingsPage'
 import CustomerStudiosPage from './pages/customer/CustomerStudiosPage'
 import CustomerFavoritesPage from './pages/customer/CustomerFavoritesPage'
 import CustomerNotificationsPage from './pages/customer/CustomerNotificationsPage'
+import StudioDetailPage from './pages/customer/StudioDetailPage'
+import PaymentPage from './pages/customer/PaymentPage'
 import PerformanceDashboard from './pages/dashboard/PerformanceDashboard'
 import AlertsDashboard from './pages/dashboard/AlertsDashboard'
 import ComparisonDashboard from './pages/dashboard/ComparisonDashboard'
@@ -186,6 +188,16 @@ function AppRoutes() {
       <Route path="/customer/bookings" element={
         <ProtectedRoute requiredRole="customer">
           <CustomerBookingsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer/studios/:slug" element={
+        <ProtectedRoute requiredRole="customer">
+          <StudioDetailPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/customer/payment/:bookingCode" element={
+        <ProtectedRoute requiredRole="customer">
+          <PaymentPage />
         </ProtectedRoute>
       } />
       <Route path="/customer/favorites" element={

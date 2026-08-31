@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import AdminLayout from '../../layouts/AdminLayout'
 import api from '../../services/api'
 
@@ -35,11 +35,7 @@ export default function ScheduleSettings() {
   const [newRecipient, setNewRecipient] = useState('')
   const [testingEmail, setTestingEmail] = useState(false)
 
-  useEffect(() => {
-    fetchSettings()
-  }, [])
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await api.get('/admin/performance/email/schedule')
       if (response.data.data) {
@@ -50,7 +46,11 @@ export default function ScheduleSettings() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchSettings()
+  }, [fetchSettings])
 
   const saveSettings = async () => {
     setSaving(true)
@@ -134,8 +134,8 @@ export default function ScheduleSettings() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Report Schedule</h1>
-            <p className="text-text-secondary">Configure automated performance report delivery</p>
+            <h1 className="text-2xl font-bold text-text-primary">Jadwal Laporan</h1>
+            <p className="text-text-secondary">Konfigurasi pengiriman laporan performa otomatis</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -143,14 +143,14 @@ export default function ScheduleSettings() {
               disabled={testingEmail}
               className="px-4 py-2 bg-surface-light text-text-secondary rounded-lg hover:text-text-primary transition-colors disabled:opacity-50"
             >
-              {testingEmail ? '⏳ Sending...' : '📧 Send Test'}
+              {testingEmail ? '⏳ Mengirim...' : '📧 Kirim Uji Coba'}
             </button>
             <button
               onClick={saveSettings}
               disabled={saving}
               className="px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
-              {saving ? '💾 Saving...' : '💾 Save Settings'}
+              {saving ? '💾 Menyimpan...' : '💾 Simpan Pengaturan'}
             </button>
           </div>
         </div>
@@ -171,8 +171,8 @@ export default function ScheduleSettings() {
         <div className="bg-surface border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">📅 Daily Summary</h2>
-              <p className="text-text-secondary text-sm">Receive daily performance summary</p>
+              <h2 className="text-lg font-semibold text-text-primary">📅 Ringkasan Harian</h2>
+              <p className="text-text-secondary text-sm">Terima ringkasan performa harian</p>
             </div>
             <button
               onClick={() => toggleSchedule('daily')}
@@ -191,7 +191,7 @@ export default function ScheduleSettings() {
           {settings.daily.enabled && (
             <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-surface-light rounded-lg">
               <div>
-                <label className="text-text-muted text-sm">Send Time</label>
+                <label className="text-text-muted text-sm">Waktu Kirim</label>
                 <input
                   type="time"
                   value={settings.daily.time}
@@ -210,8 +210,8 @@ export default function ScheduleSettings() {
         <div className="bg-surface border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">📊 Weekly Report</h2>
-              <p className="text-text-secondary text-sm">Detailed weekly performance comparison</p>
+              <h2 className="text-lg font-semibold text-text-primary">📊 Laporan Mingguan</h2>
+              <p className="text-text-secondary text-sm">Perbandingan performa mingguan detail</p>
             </div>
             <button
               onClick={() => toggleSchedule('weekly')}
@@ -231,7 +231,7 @@ export default function ScheduleSettings() {
             <div className="space-y-4 mt-4 p-4 bg-surface-light rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-text-muted text-sm">Day of Week</label>
+                  <label className="text-text-muted text-sm">Hari dalam Seminggu</label>
                   <select
                     value={settings.weekly.day}
                     onChange={(e) => setSettings(prev => ({
@@ -248,7 +248,7 @@ export default function ScheduleSettings() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-text-muted text-sm">Send Time</label>
+                  <label className="text-text-muted text-sm">Waktu Kirim</label>
                   <input
                     type="time"
                     value={settings.weekly.time}
@@ -263,7 +263,7 @@ export default function ScheduleSettings() {
 
               {/* Recipients */}
               <div>
-                <label className="text-text-muted text-sm">Recipients</label>
+                <label className="text-text-muted text-sm">Penerima</label>
                 <div className="flex gap-2 mt-1">
                   <input
                     type="email"
@@ -277,7 +277,7 @@ export default function ScheduleSettings() {
                     onClick={addRecipient}
                     className="px-4 py-2 bg-accent text-primary rounded-lg hover:bg-accent-hover transition-colors"
                   >
-                    + Add
+                    + Tambah
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -296,7 +296,7 @@ export default function ScheduleSettings() {
                     </span>
                   ))}
                   {settings.weekly.recipients.length === 0 && (
-                    <span className="text-text-muted text-sm">No recipients added</span>
+                    <span className="text-text-muted text-sm">Belum ada penerima</span>
                   )}
                 </div>
               </div>
@@ -308,8 +308,8 @@ export default function ScheduleSettings() {
         <div className="bg-surface border border-border rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-semibold text-text-primary">📈 Monthly Report</h2>
-              <p className="text-text-secondary text-sm">Comprehensive monthly analysis with PDF</p>
+              <h2 className="text-lg font-semibold text-text-primary">📈 Laporan Bulanan</h2>
+              <p className="text-text-secondary text-sm">Analisis bulanan komprehensif dengan PDF</p>
             </div>
             <button
               onClick={() => toggleSchedule('monthly')}
@@ -328,7 +328,7 @@ export default function ScheduleSettings() {
           {settings.monthly.enabled && (
             <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-surface-light rounded-lg">
               <div>
-                <label className="text-text-muted text-sm">Day of Month</label>
+                <label className="text-text-muted text-sm">Tanggal dalam Bulan</label>
                 <select
                   value={settings.monthly.day}
                   onChange={(e) => setSettings(prev => ({
@@ -345,7 +345,7 @@ export default function ScheduleSettings() {
                 </select>
               </div>
               <div>
-                <label className="text-text-muted text-sm">Send Time</label>
+                <label className="text-text-muted text-sm">Waktu Kirim</label>
                 <input
                   type="time"
                   value={settings.monthly.time}
@@ -362,7 +362,7 @@ export default function ScheduleSettings() {
 
         {/* Quick Actions */}
         <div className="bg-surface border border-border rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">⚡ Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">⚡ Aksi Cepat</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={async () => {
@@ -374,7 +374,7 @@ export default function ScheduleSettings() {
               className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left"
             >
               <span className="text-2xl mb-2 block">📅</span>
-              <span className="text-text-primary font-medium text-sm">Send Daily Now</span>
+              <span className="text-text-primary font-medium text-sm">Kirim Harian Sekarang</span>
             </button>
             <button
               onClick={async () => {
@@ -384,7 +384,7 @@ export default function ScheduleSettings() {
               className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left"
             >
               <span className="text-2xl mb-2 block">📊</span>
-              <span className="text-text-primary font-medium text-sm">Send Weekly Now</span>
+              <span className="text-text-primary font-medium text-sm">Kirim Mingguan Sekarang</span>
             </button>
             <button
               onClick={async () => {
@@ -396,7 +396,7 @@ export default function ScheduleSettings() {
               className="p-4 bg-surface-light border border-border rounded-lg hover:border-accent transition-colors text-left"
             >
               <span className="text-2xl mb-2 block">📈</span>
-              <span className="text-text-primary font-medium text-sm">Send Monthly Now</span>
+              <span className="text-text-primary font-medium text-sm">Kirim Bulanan Sekarang</span>
             </button>
             <button
               onClick={testEmail}
@@ -405,7 +405,7 @@ export default function ScheduleSettings() {
             >
               <span className="text-2xl mb-2 block">📧</span>
               <span className="text-text-primary font-medium text-sm">
-                {testingEmail ? 'Sending...' : 'Test Email'}
+                {testingEmail ? 'Mengirim...' : 'Email Uji Coba'}
               </span>
             </button>
           </div>
@@ -413,20 +413,20 @@ export default function ScheduleSettings() {
 
         {/* Schedule Info */}
         <div className="bg-surface border border-border rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">ℹ️ Schedule Information</h2>
+          <h2 className="text-lg font-semibold text-text-primary mb-4">ℹ️ Informasi Jadwal</h2>
           <div className="space-y-3 text-sm text-text-secondary">
             <p>
-              <strong>Daily Summary:</strong> Quick overview of yesterday's performance metrics.
+              <strong>Ringkasan Harian:</strong> Gambaran cepat metrik performa kemarin.
             </p>
             <p>
-              <strong>Weekly Report:</strong> Detailed comparison with the previous week, including PDF attachment.
+              <strong>Laporan Mingguan:</strong> Perbandingan detail dengan minggu sebelumnya, termasuk lampiran PDF.
             </p>
             <p>
-              <strong>Monthly Report:</strong> Comprehensive analysis with trends and recommendations.
+              <strong>Laporan Bulanan:</strong> Analisis komprehensif dengan tren dan rekomendasi.
             </p>
             <p className="text-text-muted mt-4">
-              Reports are sent via email using the configured SMTP settings. 
-              Make sure your mail configuration is set up correctly in <code>.env</code>.
+              Laporan dikirim melalui email menggunakan pengaturan SMTP yang dikonfigurasi. 
+              Pastikan pengaturan mail Anda sudah benar di <code>.env</code>.
             </p>
           </div>
         </div>

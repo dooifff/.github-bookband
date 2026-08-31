@@ -86,14 +86,14 @@ export default function AlertsDashboard() {
     const mins = Math.floor(diffMs / 60000)
     const hours = Math.floor(diffMs / 3600000)
     const days = Math.floor(diffMs / 86400000)
-    if (mins < 1) return 'Just now'
-    if (mins < 60) return `${mins}m ago`
-    if (hours < 24) return `${hours}h ago`
-    return `${days}d ago`
+    if (mins < 1) return 'Baru saja'
+    if (mins < 60) return `${mins}m lalu`
+    if (hours < 24) return `${hours}j lalu`
+    return `${days}h lalu`
   }
 
   const clearHistory = async () => {
-    if (!confirm('Are you sure you want to clear alert history?')) return
+    if (!confirm('Apakah Anda yakin ingin menghapus riwayat peringatan?')) return
     try { await api.delete('/admin/performance/alerts'); fetchAlerts() } catch (err) { console.error('Failed to clear:', err) }
   }
 
@@ -103,7 +103,7 @@ export default function AlertsDashboard() {
         <div className="flex items-center justify-center h-64">
           <div className="flex flex-col items-center gap-4">
             <div className="w-10 h-10 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-            <p className="text-text-muted text-sm">Loading alerts...</p>
+            <p className="text-text-muted text-sm">Memuat peringatan...</p>
           </div>
         </div>
       </AdminLayout>
@@ -116,8 +116,8 @@ export default function AlertsDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Performance Alerts</h1>
-            <p className="text-text-secondary mt-1 text-sm">Real-time system monitoring and alerts</p>
+            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Peringatan Performa</h1>
+            <p className="text-text-secondary mt-1 text-sm">Pemantauan dan peringatan sistem secara real-time</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
@@ -138,11 +138,11 @@ export default function AlertsDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
               { label: 'Total', value: stats.total, color: 'text-text-primary' },
-              { label: 'Active', value: stats.active, color: 'text-danger' },
-              { label: 'Critical', value: stats.critical, color: 'text-danger' },
-              { label: 'Warning', value: stats.warning, color: 'text-warning' },
-              { label: 'Last 24h', value: stats.last_24h, color: 'text-text-primary' },
-              { label: 'Last 7d', value: stats.last_7d, color: 'text-text-primary' },
+              { label: 'Aktif', value: stats.active, color: 'text-danger' },
+              { label: 'Kritis', value: stats.critical, color: 'text-danger' },
+              { label: 'Peringatan', value: stats.warning, color: 'text-warning' },
+              { label: '24 Jam Terakhir', value: stats.last_24h, color: 'text-text-primary' },
+              { label: '7 Hari Terakhir', value: stats.last_7d, color: 'text-text-primary' },
             ].map((stat, i) => (
               <div key={stat.label} className={`card-luxury p-4 animate-fade-in-up stagger-${Math.min(i + 1, 8)}`}>
                 <p className="text-text-muted text-[0.65rem] font-medium uppercase tracking-wide">{stat.label}</p>
@@ -166,12 +166,12 @@ export default function AlertsDashboard() {
         {/* Alert List */}
         <div className="card-luxury overflow-hidden animate-fade-in-up">
           <div className="px-6 py-4 border-b border-border/40">
-            <h2 className="text-base font-semibold text-text-primary">Alert History ({filteredAlerts.length})</h2>
+            <h2 className="text-base font-semibold text-text-primary">Riwayat Peringatan ({filteredAlerts.length})</h2>
           </div>
           {filteredAlerts.length === 0 ? (
             <div className="p-12 text-center text-text-muted">
               <span className="text-4xl block mb-4">🔔</span>
-              <p className="text-sm">No alerts found</p>
+              <p className="text-sm">Tidak ada peringatan ditemukan</p>
             </div>
           ) : (
             <div className="divide-y divide-border/30">
@@ -206,7 +206,7 @@ export default function AlertsDashboard() {
         {/* Thresholds */}
         {Object.keys(thresholds).length > 0 && (
           <div className="card-luxury p-6 animate-fade-in-up">
-            <h2 className="text-base font-semibold text-text-primary mb-5">📊 Alert Thresholds</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-5">📊 Ambang Batas Peringatan</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(thresholds).map(([metric, threshold]) => (
                 <div key={metric} className="p-4 rounded-xl bg-surface-light/50 border border-border/30">
@@ -224,7 +224,7 @@ export default function AlertsDashboard() {
         {/* By Metric */}
         {stats && Object.keys(stats.by_metric).length > 0 && (
           <div className="card-luxury p-6 animate-fade-in-up">
-            <h2 className="text-base font-semibold text-text-primary mb-5">📈 Alerts by Metric</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-5">📈 Peringatan per Metrik</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(stats.by_metric).map(([metric, data]) => (
                 <div key={metric} className="p-4 rounded-xl bg-surface-light/50 border border-border/30">

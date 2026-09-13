@@ -50,6 +50,10 @@ class LogoutTest extends TestCase
         $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->postJson('/api/v1/auth/logout');
 
+        // RequestGuard caches the authenticated user on the shared app instance
+        // within a single test; production runs each request in a fresh process.
+        \Illuminate\Support\Facades\Auth::forgetGuards();
+
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->getJson('/api/v1/auth/me');
 

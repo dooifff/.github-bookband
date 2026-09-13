@@ -28,6 +28,10 @@ class Studio extends Model
         'is_active',
         'average_rating',
         'total_reviews',
+        'subscription_status',
+        'subscription_expires_at',
+        'subscription_warning_level',
+        'subscription_last_warning_at',
     ];
 
     protected $casts = [
@@ -37,6 +41,9 @@ class Studio extends Model
         'is_active' => 'boolean',
         'average_rating' => 'float',
         'total_reviews' => 'integer',
+        'subscription_expires_at' => 'datetime',
+        'subscription_warning_level' => 'integer',
+        'subscription_last_warning_at' => 'datetime',
     ];
 
     protected $hidden = [
@@ -85,6 +92,11 @@ class Studio extends Model
         return $this->hasMany(Equipment::class);
     }
 
+    public function facilities()
+    {
+        return $this->hasMany(Facility::class)->orderBy('sort_order');
+    }
+
     public function openingHours()
     {
         return $this->hasMany(OpeningHour::class)->orderBy('day_of_week');
@@ -108,6 +120,11 @@ class Studio extends Model
     public function favorites()
     {
         return $this->hasMany(Favorite::class);
+    }
+
+    public function subscribers()
+    {
+        return $this->hasMany(Subscriber::class, 'studio_id');
     }
 
     public function promos()

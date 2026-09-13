@@ -6,6 +6,7 @@ use App\Models\Review;
 use App\Models\Booking;
 use App\Models\Studio;
 use App\Services\PhotoReviewService;
+use App\Services\ProfanityFilter;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -26,7 +27,7 @@ class ReviewController extends Controller
         }
 
         $reviews = Review::where('studio_id', $studio->id)
-            ->with('user:id,name')
+            ->with(['user:id,name', 'images'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -37,10 +38,18 @@ class ReviewController extends Controller
                     'id' => $review->id,
                     'user' => [
                         'id' => $review->user->id,
-                        'name' => $review->user->name,
+                        'name' => $review->is_anonymous ? 'Anonymous' : $review->user->name,
                     ],
                     'rating' => $review->rating,
-                    'comment' => $review->comment,
+                    'comment' => ProfanityFilter::censor($review->comment ?? ''),
+                    'is_anonymous' => (bool) $review->is_anonymous,
+                    'images' => $review->images->map(function ($image) {
+                        return [
+                            'id' => $image->id,
+                            'image_url' => $image->image_url,
+                            'caption' => $image->caption,
+                        ];
+                    }),
                     'created_at' => $review->created_at->toISOString(),
                 ];
             }),
@@ -67,6 +76,7 @@ class ReviewController extends Controller
             'booking_id' => 'required|exists:bookings,id',
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'nullable|string|max:1000',
+            'is_anonymous' => 'nullable|boolean',
         ]);
 
         $user = $request->user();
@@ -101,12 +111,16 @@ class ReviewController extends Controller
             ], 409);
         }
 
+        // Apply profanity filter to comment
+        $filteredComment = $request->comment ? ProfanityFilter::censor($request->comment) : null;
+
         $review = Review::create([
             'user_id' => $user->id,
             'studio_id' => $booking->studio_id,
             'booking_id' => $booking->id,
             'rating' => $request->rating,
-            'comment' => $request->comment,
+            'comment' => $filteredComment,
+            'is_anonymous' => $request->boolean('is_anonymous'),
         ]);
 
         // Update studio rating
@@ -118,7 +132,7 @@ class ReviewController extends Controller
             'data' => [
                 'id' => $review->id,
                 'rating' => $review->rating,
-                'comment' => $review->comment,
+                'comment' => ProfanityFilter::censor($review->comment ?? ''),
                 'created_at' => $review->created_at->toISOString(),
             ],
         ], 201);
@@ -145,7 +159,7 @@ class ReviewController extends Controller
                         'slug' => $review->studio->slug,
                     ],
                     'rating' => $review->rating,
-                    'comment' => $review->comment,
+                    'comment' => ProfanityFilter::censor($review->comment ?? ''),
                     'created_at' => $review->created_at->toISOString(),
                 ];
             }),

@@ -162,24 +162,23 @@ class BookingService
      */
     private function validateBlockedSchedule(Studio $studio, $roomId, Carbon $date, Carbon $startTime, Carbon $endTime): void
     {
+        $dateString = $date->toDateString();
+
         $hasConflict = BlockedSchedule::where('studio_id', $studio->id)
             ->where(function ($query) use ($roomId) {
                 $query->where('room_id', $roomId)
                     ->orWhereNull('room_id'); // null means whole studio blocked
             })
-            ->where('start_date', '<=', $date)
-            ->where('end_date', '>=', $date)
+            ->whereDate('date', $dateString)
             ->where(function ($query) use ($startTime, $endTime) {
-                $query->where(function ($q) use ($startTime, $endTime) {
-                    $q->where('start_time', '<=', $startTime)
-                      ->where('end_time', '>', $startTime);
-                })->orWhere(function ($q) use ($startTime, $endTime) {
-                    $q->where('start_time', '<', $endTime)
-                      ->where('end_time', '>=', $endTime);
-                })->orWhere(function ($q) use ($startTime, $endTime) {
-                    $q->where('start_time', '>=', $startTime)
-                      ->where('end_time', '<=', $endTime);
-                });
+                // All-day block for this date
+                $query->where('all_day', true)
+                    // Or time-range block that overlaps
+                    ->orWhere(function ($q) use ($startTime, $endTime) {
+                        $q->where('all_day', false)
+                          ->where('start_time', '<', $endTime->format('H:i:s'))
+                          ->where('end_time', '>', $startTime->format('H:i:s'));
+                    });
             })
             ->exists();
 
@@ -194,7 +193,7 @@ class BookingService
     private function validateOverlappingBookings($roomId, Carbon $date, Carbon $startTime, Carbon $endTime): void
     {
         $hasOverlap = Booking::where('room_id', $roomId)
-            ->where('date', $date->toDateString())
+            ->whereDate('date', $date->toDateString())
             ->whereNotIn('status', ['cancelled', 'expired', 'failed'])
             ->where(function ($query) use ($startTime, $endTime) {
                 // Overlap condition: existing.start < new.end AND existing.end > new.start
@@ -293,7 +292,7 @@ class BookingService
         $booking = DB::transaction(function () use ($booking, $reason) {
             $booking->update([
                 'status' => 'cancelled',
-                'cancellation_reason' => $reason,
+                'cancel_reason' => $reason,
                 'cancelled_at' => now(),
             ]);
 

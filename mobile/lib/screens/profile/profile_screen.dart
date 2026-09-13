@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
@@ -24,9 +25,15 @@ class ProfileScreen extends StatelessWidget {
 
             // Menu Items
             _buildMenuSection(context, 'AKUN', [
-              _buildMenuItem(context, icon: Icons.person_outline, title: 'Edit Profil', onTap: () {}),
-              _buildMenuItem(context, icon: Icons.lock_outline, title: 'Ubah Password', onTap: () {}),
-              _buildMenuItem(context, icon: Icons.payment_outlined, title: 'Metode Pembayaran', onTap: () {}, isLast: true),
+              _buildMenuItem(context, icon: Icons.person_outline, title: 'Edit Profil', onTap: () {
+                _openEditProfile(context, authProvider);
+              }),
+              _buildMenuItem(context, icon: Icons.lock_outline, title: 'Ubah Password', onTap: () {
+                _openChangePassword(context, authProvider);
+              }),
+              _buildMenuItem(context, icon: Icons.payment_outlined, title: 'Metode Pembayaran', onTap: () {
+                _showPaymentMethods(context);
+              }, isLast: true),
             ]),
             const SizedBox(height: 16),
 
@@ -41,9 +48,15 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             _buildMenuSection(context, 'BANTUAN', [
-              _buildMenuItem(context, icon: Icons.help_outline, title: 'Pusat Bantuan', onTap: () {}),
-              _buildMenuItem(context, icon: Icons.description_outlined, title: 'Syarat & Ketentuan', onTap: () {}),
-              _buildMenuItem(context, icon: Icons.privacy_tip_outlined, title: 'Kebijakan Privasi', onTap: () {}, isLast: true),
+              _buildMenuItem(context, icon: Icons.help_outline, title: 'Pusat Bantuan', onTap: () {
+                _showHelp(context);
+              }),
+              _buildMenuItem(context, icon: Icons.description_outlined, title: 'Syarat & Ketentuan', onTap: () {
+                _showLegal(context, title: 'Syarat & Ketentuan', body: _termsText());
+              }),
+              _buildMenuItem(context, icon: Icons.privacy_tip_outlined, title: 'Kebijakan Privasi', onTap: () {
+                _showLegal(context, title: 'Kebijakan Privasi', body: _privacyText());
+              }, isLast: true),
             ]),
             const SizedBox(height: 16),
 
@@ -64,9 +77,24 @@ class ProfileScreen extends StatelessWidget {
                   children: [const Text('Platform booking studio musik premium.')],
                 );
               }),
-              _buildMenuItem(context, icon: Icons.star_outline, title: 'Beri Rating', onTap: () {}, isLast: true),
+              _buildMenuItem(context, icon: Icons.star_outline, title: 'Beri Rating', onTap: () {
+                _showLegal(context,
+                    title: 'Beri Rating',
+                    body: 'Terima kasih telah menggunakan StudioBook!\n\n'
+                        'Rating Anda di store membantu kami terus berkembang. '
+                        'Silakan beri rating dan ulasan melalui Google Play Store atau App Store.');
+              }, isLast: true),
             ]),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            if (user?.isAdmin == true) ...[
+              _buildMenuSection(context, 'ADMIN', [
+                _buildMenuItem(context, icon: Icons.admin_panel_settings_outlined, title: 'Admin Panel', onTap: () {
+                  context.go('/admin');
+                }, isLast: true),
+              ]),
+              const SizedBox(height: 16),
+            ],
 
             // Logout Button
             Padding(
@@ -225,6 +253,313 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _openEditProfile(BuildContext context, AuthProvider authProvider) {
+    final nameCtrl = TextEditingController(text: authProvider.user?.name ?? '');
+    final emailCtrl = TextEditingController(text: authProvider.user?.email ?? '');
+    final phoneCtrl = TextEditingController(text: authProvider.user?.phone ?? '');
+    var saving = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Edit Profil'),
+          content: Form(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Nama'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'No. HP'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      setDialogState(() => saving = true);
+                      final ok = await authProvider.updateProfile(
+                        name: nameCtrl.text.trim(),
+                        email: emailCtrl.text.trim(),
+                        phone: phoneCtrl.text.trim(),
+                      );
+                      if (!dialogContext.mounted) return;
+                      if (ok) {
+                        Navigator.pop(dialogContext);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Profil berhasil diperbarui'),
+                            backgroundColor: AppTheme.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      } else {
+                        setDialogState(() => saving = false);
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(
+                            content: Text(authProvider.error ?? 'Gagal memperbarui profil'),
+                            backgroundColor: AppTheme.danger,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+              child: saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openChangePassword(BuildContext context, AuthProvider authProvider) {
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+    var saving = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('Ubah Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: currentCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password saat ini'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: newCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password baru'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: confirmCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Ulangi password baru'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      if (newCtrl.text.isEmpty || newCtrl.text.length < 8) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          const SnackBar(
+                            content: Text('Password baru minimal 8 karakter'),
+                            backgroundColor: AppTheme.danger,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+                      if (newCtrl.text != confirmCtrl.text) {
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          const SnackBar(
+                            content: Text('Konfirmasi password tidak cocok'),
+                            backgroundColor: AppTheme.danger,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+                      setDialogState(() => saving = true);
+                      final ok = await authProvider.updatePassword(
+                        currentPassword: currentCtrl.text,
+                        newPassword: newCtrl.text,
+                      );
+                      if (!dialogContext.mounted) return;
+                      if (ok) {
+                        Navigator.pop(dialogContext);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Password berhasil diubah'),
+                            backgroundColor: AppTheme.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      } else {
+                        setDialogState(() => saving = false);
+                        ScaffoldMessenger.of(dialogContext).showSnackBar(
+                          SnackBar(
+                            content: Text(authProvider.error ?? 'Gagal mengubah password'),
+                            backgroundColor: AppTheme.danger,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+              child: saving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentMethods(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Metode Pembayaran'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _PaymentMethodRow(label: 'Transfer Bank (BCA, BNI, Mandiri)', icon: Icons.account_balance),
+            SizedBox(height: 10),
+            _PaymentMethodRow(label: 'QRIS', icon: Icons.qr_code_2),
+            SizedBox(height: 10),
+            _PaymentMethodRow(label: 'E-Wallet (GoPay, OVO, DANA)', icon: Icons.wallet),
+            SizedBox(height: 10),
+            _PaymentMethodRow(label: 'Kartu Kredit / Debit', icon: Icons.credit_card),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelp(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pusat Bantuan'),
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('• Cara melakukan booking',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              SizedBox(height: 4),
+              Text('Pilih studio, cek ketersediaan waktu, dan selesaikan pembayaran.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+              SizedBox(height: 12),
+              Text('• Pembatalan & refund',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              SizedBox(height: 4),
+              Text('Pembatalan dapat dilakukan melalui halaman booking sebelum jadwal dimulai.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+              SizedBox(height: 12),
+              Text('• Kendala teknis',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              SizedBox(height: 4),
+              Text('Hubungi tim dukungan melalui email support@studiobook.com.',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLegal(BuildContext context, {required String title, required String body}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: SingleChildScrollView(
+          child: Text(body, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _termsText() {
+    return '1. Layanan ini digunakan untuk booking studio musik premium.\n\n'
+        '2. Pengguna wajib melakukan pembayaran sesuai tarif yang ditampilkan.\n\n'
+        '3. Pembatalan maksimal H-1 sebelum jadwal untuk mendapatkan refund sesuai kebijakan.\n\n'
+        '4. Dilarang menyalahgunakan platform untuk aktivitas yang melanggar hukum.\n\n'
+        '5. StudioBook berhak menonaktifkan akun yang terbukti melanggar ketentuan.';
+  }
+
+  String _privacyText() {
+    return '1. Data pribadi Anda digunakan untuk keperluan layanan booking dan komunikasi.\n\n'
+        '2. Kami tidak membagikan data pribadi kepada pihak ketiga tanpa izin, kecuali diwajibkan hukum.\n\n'
+        '3. Data pembayaran diproses oleh penyedia payment gateway terpercaya.\n\n'
+        '4. Anda dapat meminta penghapusan akun melalui dukungan pelanggan.';
+  }
+}
+
+class _PaymentMethodRow extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _PaymentMethodRow({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppTheme.accent),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+        ),
+      ],
     );
   }
 }

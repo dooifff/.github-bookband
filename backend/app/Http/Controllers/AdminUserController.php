@@ -182,6 +182,39 @@ class AdminUserController extends Controller
     }
 
     /**
+     * Create a new owner account
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8',
+            'role' => 'sometimes|in:owner,admin,customer',
+        ]);
+
+        $user = \App\Models\User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'] ?? null,
+            'role' => $validated['role'] ?? 'owner',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun berhasil dibuat',
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+        ], 201);
+    }
+
+    /**
      * Get user statistics
      */
     public function stats(): JsonResponse

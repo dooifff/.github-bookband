@@ -18,7 +18,7 @@ class Formatters {
   };
 
   /// Format currency (Rupiah)
-  static String currency(double amount) {
+  static String currency(num amount) {
     return _currencyFormat.format(amount);
   }
 

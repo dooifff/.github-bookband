@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
-import '../../repositories/auth_repository.dart';
+import '../../providers/auth_provider.dart';
+import '../../repositories/chat_repository.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -29,8 +31,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
     });
 
     try {
-      final authRepository = context.read<AuthRepository>();
-      final response = await authRepository.getChatRooms();
+      final chatRepository = context.read<ChatRepository>();
+      final response = await chatRepository.getChatRooms();
       
       setState(() {
         _chatRooms = List<Map<String, dynamic>>.from(response['data'] ?? []);
@@ -130,7 +132,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   }
 
   Widget _buildChatRoomCard(Map<String, dynamic> room) {
-    final isCustomer = room['customer_id'] == context.read<AuthRepository>().currentUserId;
+    final isCustomer = room['customer_id'] == context.read<AuthProvider>().user?.id;
     final otherUser = isCustomer ? room['owner'] : room['customer'];
     final lastMessage = room['last_message'];
     final unreadCount = room['unread_count'] ?? 0;
@@ -138,11 +140,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return GestureDetector(
       onTap: () {
         // Navigate to chat room
-        Navigator.pushNamed(
-          context,
-          '/chat/room',
-          arguments: {
-            'roomId': room['id'],
+        context.push(
+          '/chat/${room['id']}',
+          extra: {
             'otherUser': otherUser,
             'studioName': room['studio']?['name'],
           },
@@ -242,7 +242,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     lastMessage?['message'] ?? 'Mulai chat...',
                     style: TextStyle(
                       fontSize: 13,
-                      color: unreadCount > 0 ? AppTheme.textPrimary, : AppTheme.textMuted,
+                      color: unreadCount > 0 ? AppTheme.textPrimary : AppTheme.textMuted,
                       fontWeight: unreadCount > 0 ? FontWeight.w500 : FontWeight.normal,
                     ),
                     maxLines: 1,

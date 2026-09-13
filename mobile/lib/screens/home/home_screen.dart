@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../providers/studio_provider.dart';
+import '../../models/studio_model.dart';
+import '../../repositories/studio_repository.dart';
+import '../../services/api_service.dart';
 import '../explore/explore_screen.dart';
 import '../bookings/bookings_screen.dart';
 import '../favorites/favorites_screen.dart';
@@ -76,8 +77,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   const _HomeTab();
+
+  @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  bool _loadingPopular = true;
+  String? _popularError;
+  List<Studio> _popular = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPopular();
+  }
+
+  Future<void> _loadPopular() async {
+    setState(() {
+      _loadingPopular = true;
+      _popularError = null;
+    });
+    try {
+      final repository = StudioRepository(ApiService());
+      final result = await repository.getStudios(sortBy: 'popular', limit: 3);
+      if (!mounted) return;
+      setState(() {
+        _popular = result['studios'] as List<Studio>;
+        _loadingPopular = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _popularError = e.toString();
+        _loadingPopular = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,26 +253,42 @@ class _HomeTab extends StatelessWidget {
             const SizedBox(height: 14),
 
             // Studio Cards
-            _StudioCard(
-              name: 'Studio Melody',
-              location: 'Jakarta Selatan',
-              rating: 4.8,
-              price: 'Rp 150.000/jam',
-            ),
-            const SizedBox(height: 12),
-            _StudioCard(
-              name: 'Studio Harmony',
-              location: 'Bandung',
-              rating: 4.6,
-              price: 'Rp 120.000/jam',
-            ),
-            const SizedBox(height: 12),
-            _StudioCard(
-              name: 'Studio Rhythm',
-              location: 'Surabaya',
-              rating: 4.9,
-              price: 'Rp 180.000/jam',
-            ),
+            if (_loadingPopular)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_popularError != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Gagal memuat studio',
+                      style: TextStyle(color: AppTheme.danger, fontSize: 14),
+                    ),
+                    TextButton.icon(
+                      onPressed: _loadPopular,
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('Coba lagi'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_popular.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Belum ada studio tersedia.',
+                  style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
+                ),
+              )
+            else
+              for (var i = 0; i < _popular.length; i++) ...[
+                _StudioCard(studio: _popular[i]),
+                if (i != _popular.length - 1) const SizedBox(height: 12),
+              ],
           ],
         ),
       ),
@@ -277,28 +331,34 @@ class _CategoryChip extends StatelessWidget {
 }
 
 class _StudioCard extends StatelessWidget {
-  final String name;
-  final String location;
-  final double rating;
-  final String price;
-  final String? slug;
+  final Studio studio;
 
-  const _StudioCard({
-    required this.name,
-    required this.location,
-    required this.rating,
-    required this.price,
-    this.slug,
-  });
+  const _StudioCard({required this.studio});
+
+  String get _location {
+    final city = studio.city ?? '';
+    final province = studio.province ?? '';
+    return [city, province].where((s) => s.isNotEmpty).join(', ');
+  }
+
+  String get _price {
+    if (studio.rooms.isEmpty) return 'Hubungi Studio';
+    double? lowest;
+    for (final r in studio.rooms) {
+      if (lowest == null || r.pricePerHour < lowest) lowest = r.pricePerHour;
+    }
+    if (lowest == null) return 'Hubungi Studio';
+    return 'Rp ${lowest.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}/jam';
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (slug != null) {
+        if (studio.slug.isNotEmpty) {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => StudioDetailScreen(studioSlug: slug!),
+              builder: (_) => StudioDetailScreen(studioSlug: studio.slug),
             ),
           );
         }
@@ -338,7 +398,9 @@ class _StudioCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    studio.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -350,9 +412,13 @@ class _StudioCard extends StatelessWidget {
                     children: [
                       const Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textMuted),
                       const SizedBox(width: 3),
-                      Text(
-                        location,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      Expanded(
+                        child: Text(
+                          _location.isEmpty ? 'Lokasi tidak tersedia' : _location,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                        ),
                       ),
                     ],
                   ),
@@ -362,8 +428,13 @@ class _StudioCard extends StatelessWidget {
                       const Icon(Icons.star, size: 13, color: AppTheme.warning),
                       const SizedBox(width: 3),
                       Text(
-                        rating.toString(),
+                        studio.averageRating.toStringAsFixed(1),
                         style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '(${studio.totalReviews})',
+                        style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
                       ),
                     ],
                   ),
@@ -379,7 +450,7 @@ class _StudioCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                price,
+                _price,
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

@@ -5,14 +5,21 @@ import '../../models/studio_model.dart';
 import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/studio_provider.dart';
+import '../../repositories/studio_repository.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/time_slot_picker.dart';
 import 'booking_confirmation_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class BookingScreen extends StatefulWidget {
-  final Studio studio;
+  /// Either a loaded [studio] (in-app navigation) or a [studioSlug] to fetch
+  /// it from the API (deep link, e.g. `/book/my-studio`).
+  final Studio? studio;
+  final String? studioSlug;
 
-  const BookingScreen({super.key, required this.studio});
+  const BookingScreen({super.key, this.studio, this.studioSlug})
+      : assert(studio != null || studioSlug != null,
+            'BookingScreen needs a studio or a studioSlug');
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -23,8 +30,48 @@ class _BookingScreenState extends State<BookingScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedStartTime;
   String? _selectedEndTime;
+  List<Map<String, dynamic>> _availableSlots = const [];
+  bool _isLoadingSlots = false;
   final _notesController = TextEditingController();
-  int _selectedSlotIndex = -1;
+
+  /// Studio passed in by the caller, or the one loaded for [widget.studioSlug].
+  Studio? get _studio =>
+      widget.studio ?? context.read<StudioProvider>().selectedStudio;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.studio == null && widget.studioSlug != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<StudioProvider>().getStudioBySlug(widget.studioSlug!);
+      });
+    }
+  }
+
+  Future<void> _loadSlots(Studio studio) async {
+    final room = _selectedRoom;
+    if (room == null) return;
+
+    setState(() => _isLoadingSlots = true);
+    try {
+      final slots = await context.read<StudioRepository>().getAvailableSlots(
+        slug: studio.slug,
+        date: DateFormat('yyyy-MM-dd').format(_selectedDate),
+        roomId: '${room.id}',
+      );
+      if (!mounted) return;
+      setState(() {
+        _availableSlots = slots;
+        _isLoadingSlots = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _availableSlots = const [];
+        _isLoadingSlots = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -34,6 +81,16 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch so the screen rebuilds once a deep-linked slug has been loaded.
+    final studio =
+        widget.studio ?? context.watch<StudioProvider>().selectedStudio;
+    if (studio == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Book Studio')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Studio'),
@@ -56,7 +113,7 @@ class _BookingScreenState extends State<BookingScreen> {
                         color: AppTheme.accent[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.studio, color: AppTheme.accent),
+                      child: const Icon(Icons.music_note, color: AppTheme.accent),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -64,14 +121,14 @@ class _BookingScreenState extends State<BookingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.studio.name,
+                            studio.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            '${widget.studio.city}, ${widget.studio.province}',
+                            '${studio.city}, ${studio.province}',
                             style: TextStyle(color: AppTheme.textMuted),
                           ),
                         ],
@@ -96,9 +153,9 @@ class _BookingScreenState extends State<BookingScreen> {
               height: 120,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: widget.studio.rooms.length,
+                itemCount: studio.rooms.length,
                 itemBuilder: (context, index) {
-                  final room = widget.studio.rooms[index];
+                  final room = studio.rooms[index];
                   final isSelected = _selectedRoom?.id == room.id;
                   return GestureDetector(
                     onTap: () {
@@ -106,8 +163,9 @@ class _BookingScreenState extends State<BookingScreen> {
                         _selectedRoom = room;
                         _selectedStartTime = null;
                         _selectedEndTime = null;
-                        _selectedSlotIndex = -1;
+                        _availableSlots = const [];
                       });
+                      _loadSlots(studio);
                     },
                     child: Container(
                       width: 150,
@@ -179,8 +237,9 @@ class _BookingScreenState extends State<BookingScreen> {
                         _selectedDate = date;
                         _selectedStartTime = null;
                         _selectedEndTime = null;
-                        _selectedSlotIndex = -1;
+                        _availableSlots = const [];
                       });
+                      _loadSlots(studio);
                     },
                     child: Container(
                       width: 60,
@@ -235,19 +294,25 @@ class _BookingScreenState extends State<BookingScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TimeSlotPicker(
-                studioId: widget.studio.id,
-                roomId: _selectedRoom!.id,
-                date: _selectedDate,
-                onSlotSelected: (startTime, endTime, index) {
-                  setState(() {
-                    _selectedStartTime = startTime;
-                    _selectedEndTime = endTime;
-                    _selectedSlotIndex = index;
-                  });
-                },
-                selectedIndex: _selectedSlotIndex,
-              ),
+              if (_isLoadingSlots)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else
+                TimeSlotPicker(
+                  availableSlots: _availableSlots,
+                  selectedStartTime: _selectedStartTime,
+                  selectedEndTime: _selectedEndTime,
+                  onTimeSelected: (startTime, endTime) {
+                    setState(() {
+                      _selectedStartTime = startTime;
+                      _selectedEndTime = endTime;
+                    });
+                  },
+                ),
               const SizedBox(height: 24),
             ],
 
@@ -405,7 +470,7 @@ class _BookingScreenState extends State<BookingScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => BookingConfirmationScreen(
-          studio: widget.studio,
+          studio: _studio!,
           room: _selectedRoom!,
           date: _selectedDate,
           startTime: _selectedStartTime!,

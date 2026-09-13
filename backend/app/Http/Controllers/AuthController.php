@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ForgotPasswordRequest;
+use App\Http\Requests\GoogleAuthRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
@@ -10,6 +11,7 @@ use App\Http\Requests\UpdatePasswordRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\GoogleAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +65,75 @@ class AuthController extends Controller
             'user' => new UserResource($user),
             'token' => $token,
         ], 'Login berhasil');
+    }
+
+    /**
+     * Login/register with Google (ID token dari Google Identity Services)
+     */
+    public function google(GoogleAuthRequest $request, GoogleAuthService $googleAuth): JsonResponse
+    {
+        $claims = $googleAuth->verifyIdToken($request->string('id_token')->toString());
+
+        $googleId = (string) $claims['sub'];
+        $email = $claims['email'] ?? null;
+
+        if (! $email) {
+            throw ValidationException::withMessages([
+                'id_token' => ['Akun Google tidak mengirimkan email'],
+            ]);
+        }
+
+        if (($claims['email_verified'] ?? false) !== true) {
+            throw ValidationException::withMessages([
+                'id_token' => ['Email Google belum terverifikasi'],
+            ]);
+        }
+
+        $user = User::where('google_id', $googleId)
+            ->orWhere('email', $email)
+            ->first();
+
+        $isNewUser = false;
+
+        if ($user) {
+            $attributes = [];
+
+            // Tautkan akun lama (yang mendaftar dengan email/password) ke Google.
+            if (! $user->google_id) {
+                $attributes['google_id'] = $googleId;
+            }
+
+            if (! $user->avatar && ! empty($claims['picture'])) {
+                $attributes['avatar'] = $claims['picture'];
+            }
+
+            if (! $user->email_verified_at) {
+                $attributes['email_verified_at'] = now();
+            }
+
+            if ($attributes) {
+                $user->forceFill($attributes)->save();
+            }
+        } else {
+            $isNewUser = true;
+
+            $user = User::create([
+                'name' => $claims['name'] ?? Str::before($email, '@'),
+                'email' => $email,
+                'google_id' => $googleId,
+                'avatar' => $claims['picture'] ?? null,
+                'role' => $request->input('role') === 'owner' ? 'owner' : 'customer',
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return $this->successResponse([
+            'user' => new UserResource($user),
+            'token' => $token,
+            'is_new_user' => $isNewUser,
+        ], $isNewUser ? 'Registrasi berhasil' : 'Login berhasil', $isNewUser ? 201 : 200);
     }
 
     /**
@@ -132,11 +203,17 @@ class AuthController extends Controller
             $request->only('email')
         );
 
-        if ($status === Password::RESET_LINK_SENT) {
+        // Selalu balas sukses agar tidak membocorkan email mana yang terdaftar.
+        if (in_array($status, [Password::RESET_LINK_SENT, Password::INVALID_USER], true)) {
             return $this->successResponse(null, 'Link reset password telah dikirim ke email');
         }
 
-        return $this->errorResponse('Gagal mengirim link reset password', 500);
+        return $this->errorResponse(
+            $status === Password::RESET_THROTTLED
+                ? 'Mohon tunggu sebelum meminta link reset lagi'
+                : 'Gagal mengirim link reset password',
+            429
+        );
     }
 
     /**
@@ -158,7 +235,7 @@ class AuthController extends Controller
             return $this->successResponse(null, 'Password berhasil direset');
         }
 
-        return $this->errorResponse('Gagal mereset password', 500);
+        return $this->errorResponse('Token reset tidak valid atau sudah kedaluwarsa', 422);
     }
 
     /**

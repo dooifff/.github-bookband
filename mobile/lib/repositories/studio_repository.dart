@@ -35,16 +35,16 @@ class StudioRepository {
 
     return {
       'studios': (response['data'] as List)
-          .map((json) => StudioModel.fromJson(json))
+          .map((json) => Studio.fromJson(json))
           .toList(),
       'meta': response['meta'],
     };
   }
 
   /// Get studio detail by slug
-  Future<StudioModel> getStudioBySlug(String slug) async {
+  Future<Studio> getStudioBySlug(String slug) async {
     final response = await _api.get('/studios/$slug');
-    return StudioModel.fromJson(response['data']);
+    return Studio.fromJson(response['data']);
   }
 
   /// Get studio rooms
@@ -94,7 +94,45 @@ class StudioRepository {
         'room_id': roomId,
       },
     );
-    return List<Map<String, dynamic>>.from(response['data']);
+    final data = response['data'];
+    if (data is Map) {
+      final slots = data['slots'];
+      if (slots is List) {
+        return List<Map<String, dynamic>>.from(slots);
+      }
+    }
+    if (data is List) {
+      return List<Map<String, dynamic>>.from(data);
+    }
+    return [];
+  }
+
+  /// Dynamic pricing preview for a room over a date range
+  Future<Map<String, dynamic>> getPricingPreview(
+    int roomId,
+    String startDate,
+    String endDate, {
+    String? startTime,
+    String? endTime,
+  }) async {
+    final response = await _api.get('/pricing/preview', queryParameters: {
+      'room_id': roomId,
+      'start_date': startDate,
+      'end_date': endDate,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+    });
+
+    final data = response['data'];
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      map['pricing'] ??= const [];
+      return map;
+    }
+    if (data is List) {
+      return {'pricing': data};
+    }
+    return {'pricing': const []};
   }
 
   /// Get studio reviews
@@ -142,7 +180,7 @@ class StudioRepository {
     List<String> dates, {
     String? reason,
   }) async {
-    final response = await _api.post('/bulk-schedules/block-dates', data: {
+    final response = await _api.post('/owner/bulk-schedules/block-dates', data: {
       'room_id': roomId,
       'dates': dates,
       if (reason != null) 'reason': reason,
@@ -159,7 +197,7 @@ class StudioRepository {
     String? endTime,
     String? reason,
   }) async {
-    final response = await _api.post('/bulk-schedules/block-range', data: {
+    final response = await _api.post('/owner/bulk-schedules/block-range', data: {
       'room_id': roomId,
       'start_date': startDate,
       'end_date': endDate,
@@ -180,7 +218,7 @@ class StudioRepository {
     String? endTime,
     String? reason,
   }) async {
-    final response = await _api.post('/bulk-schedules/block-recurring', data: {
+    final response = await _api.post('/owner/bulk-schedules/block-recurring', data: {
       'room_id': roomId,
       'days_of_week': daysOfWeek,
       'start_date': startDate,
@@ -198,7 +236,7 @@ class StudioRepository {
     List<String> dates, {
     String? reason,
   }) async {
-    final response = await _api.post('/bulk-schedules/block-multiple-rooms', data: {
+    final response = await _api.post('/owner/bulk-schedules/block-multiple-rooms', data: {
       'room_ids': roomIds,
       'dates': dates,
       if (reason != null) 'reason': reason,
@@ -208,7 +246,7 @@ class StudioRepository {
 
   /// Remove blocked schedules in bulk
   Future<Map<String, dynamic>> removeBulkBlocked(List<int> blockedIds) async {
-    final response = await _api.post('/bulk-schedules/remove-bulk', data: {
+    final response = await _api.post('/owner/bulk-schedules/remove-bulk', data: {
       'blocked_ids': blockedIds,
     });
     return response;
@@ -220,7 +258,7 @@ class StudioRepository {
     String startDate,
     String endDate,
   ) async {
-    final response = await _api.get('/bulk-schedules/summary', queryParameters: {
+    final response = await _api.get('/owner/bulk-schedules/summary', queryParameters: {
       'room_id': roomId,
       'start_date': startDate,
       'end_date': endDate,

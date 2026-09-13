@@ -70,9 +70,9 @@ class UserModelTest extends TestCase
     public function test_user_has_studios()
     {
         $user = User::factory()->create(['role' => 'owner']);
-        $studio = \App\Models\Studio::factory()->create(['user_id' => $user->id]);
+        $studio = \App\Models\Studio::factory()->create(['owner_id' => $user->id]);
 
-        $this->assertTrue($user->studios->contains($studio));
+        $this->assertTrue($user->ownedStudios->contains($studio));
     }
 
     public function test_user_has_bookings()
@@ -102,7 +102,8 @@ class UserModelTest extends TestCase
     public function test_user_has_bands()
     {
         $user = User::factory()->create();
-        $band = \App\Models\Band::factory()->create(['user_id' => $user->id]);
+        $band = \App\Models\Band::factory()->create(['owner_id' => $user->id]);
+        $user->bands()->attach($band->id, ['role' => 'owner']);
 
         $this->assertTrue($user->bands->contains($band));
     }

@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('studio_id')->constrained('studios')->cascadeOnDelete();
             $table->string('url');
+            $table->boolean('is_primary')->default(false);
             $table->string('caption')->nullable();
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();

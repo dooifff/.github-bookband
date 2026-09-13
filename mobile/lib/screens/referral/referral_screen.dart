@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_theme.dart';
-import '../../repositories/auth_repository.dart';
+import '../../repositories/referral_repository.dart';
 
 class ReferralScreen extends StatefulWidget {
   const ReferralScreen({super.key});
@@ -30,8 +31,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
     });
 
     try {
-      final authRepository = context.read<AuthRepository>();
-      final response = await authRepository.getReferralInfo();
+      final referralRepository = context.read<ReferralRepository>();
+      final response = await referralRepository.getReferralInfo();
       
       setState(() {
         _referralData = response['data'];
@@ -154,7 +155,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.textSecondary,,
+              color: AppTheme.textSecondary,
             ),
           ),
         ],
@@ -244,7 +245,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: AppTheme.surfaceLighter,,
+            color: AppTheme.surfaceLighter,
           ),
         ),
         const SizedBox(height: 4),

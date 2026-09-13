@@ -9,16 +9,12 @@ class StudioImage extends Model
 {
     use HasFactory;
 
-    protected $table = 'studio_images';
-
-    protected $fillable = [
-        'studio_id',
-        'url',
-        'caption',
-        'sort_order',
+    protected $table = 'studio_images';    protected $fillable = [
+        'studio_id', 'url', 'is_primary', 'caption', 'sort_order',
     ];
 
     protected $casts = [
+        'is_primary' => 'boolean',
         'sort_order' => 'integer',
     ];
 

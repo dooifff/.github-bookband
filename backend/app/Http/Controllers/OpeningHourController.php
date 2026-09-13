@@ -14,9 +14,9 @@ class OpeningHourController extends Controller
     /**
      * List opening hours for a studio
      */
-    public function index(Request $request, int $studioId)
+    public function index(Request $request, string $slug)
     {
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
 
         $hours = $studio->openingHours()
             ->orderBy('day_of_week')

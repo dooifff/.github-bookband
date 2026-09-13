@@ -8,16 +8,19 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BandController;
 use App\Http\Controllers\PromoController;
+use App\Http\Controllers\PublicStatsController;
 use App\Http\Controllers\BlockedScheduleController;
 use App\Http\Controllers\BulkScheduleController;
 use App\Http\Controllers\DynamicPricingController;
 use App\Http\Controllers\EquipmentController;
+use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\ReferralController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\OpeningHourController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StudioController;
+use App\Http\Controllers\StudioSubscriptionController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\OwnerAnalyticsController;
 use App\Http\Controllers\OwnerRevenueController;
@@ -25,6 +28,8 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AdminStudioController;
 use App\Http\Controllers\AdminBookingController;
+use App\Http\Controllers\SubscriberController;
+use App\Http\Controllers\OwnerPromoController;
 use App\Http\Controllers\PerformanceController;
 use App\Http\Controllers\PerformanceAlertController;
 use App\Http\Controllers\PerformanceComparisonController;
@@ -70,12 +75,60 @@ Route::get('/health', function () {
     ]);
 })->middleware('cache.no');
 
+// Debug Route - Check server health (REMOVE AFTER DEBUGGING)
+Route::get('/debug', function () {
+    $checks = [];
+
+    // PHP Version
+    $checks['php_version'] = phpversion();
+    $checks['php_ok'] = version_compare(phpversion(), '8.2.0', '>=');
+
+    // APP_KEY
+    $checks['app_key_set'] = !empty(config('app.key'));
+
+    // Database connection
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $checks['db_connection'] = 'OK';
+    } catch (\Exception $e) {
+        $checks['db_connection'] = 'FAILED: ' . $e->getMessage();
+    }
+
+    // Check tables exist
+    try {
+        $tables = \Illuminate\Support\Facades\DB::select("SHOW TABLES");
+        $tableNames = array_map(function ($t) { return reset($t); }, $tables);
+        $checks['tables'] = $tableNames;
+        $checks['users_table'] = in_array('users', $tableNames);
+        $checks['personal_access_tokens_table'] = in_array('personal_access_tokens', $tableNames);
+        $checks['sessions_table'] = in_array('sessions', $tableNames);
+        $checks['users_count'] = \Illuminate\Support\Facades\DB::table('users')->count();
+    } catch (\Exception $e) {
+        $checks['tables_error'] = $e->getMessage();
+    }
+
+    // Sanctum config
+    $checks['sanctum_stateful_domains'] = config('sanctum.stateful');
+    $checks['cors_allowed_origins'] = config('cors.allowed_origins');
+
+    // Session driver
+    $checks['session_driver'] = config('session.driver');
+    $checks['cache_store'] = config('cache.default');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Debug info',
+        'data' => $checks,
+    ]);
+});
+
 // Public Routes (no auth required)
 Route::prefix('v1')->group(function () {
     // Auth Routes (Public)
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/google', [AuthController::class, 'google']);
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     });
@@ -103,6 +156,9 @@ Route::prefix('v1')->group(function () {
     // Public Promo Routes - cache 5 min
     Route::get('/promos', [PromoController::class, 'index'])->middleware('cache.public');
     Route::get('/promos/{code}', [PromoController::class, 'show'])->middleware('cache.public');
+
+    // Public Platform Stats - cache 5 min
+    Route::get('/stats', [PublicStatsController::class, 'index'])->middleware('cache.public');
 });
 
 // Protected Routes (auth required)
@@ -221,8 +277,15 @@ Route::prefix('v1/owner')->middleware(['auth:sanctum', 'role:owner,super_admin']
     Route::post('/studios', [StudioController::class, 'store']);
     Route::put('/studios/{id}', [StudioController::class, 'update']);
     Route::delete('/studios/{id}', [StudioController::class, 'destroy']);
+    Route::post('/studios/{studioId}/images', [StudioController::class, 'uploadImage']);
+    Route::delete('/studios/{studioId}/images/{imageId}', [StudioController::class, 'deleteImage']);
+
+    // Studio Subscription Management (owner)
+    Route::get('/studios/{studioId}/subscription', [StudioSubscriptionController::class, 'ownerInfo']);
+    Route::post('/studios/{studioId}/subscription/renew', [StudioSubscriptionController::class, 'ownerRenew']);
     
     // Room Management
+    Route::get('/studios/{studioId}/rooms', [RoomController::class, 'ownerRooms']);
     Route::post('/studios/{studioId}/rooms', [RoomController::class, 'store']);
     Route::put('/studios/{studioId}/rooms/{roomId}', [RoomController::class, 'update']);
     Route::delete('/studios/{studioId}/rooms/{roomId}', [RoomController::class, 'destroy']);
@@ -231,6 +294,12 @@ Route::prefix('v1/owner')->middleware(['auth:sanctum', 'role:owner,super_admin']
     Route::post('/studios/{studioId}/equipment', [EquipmentController::class, 'store']);
     Route::put('/studios/{studioId}/equipment/{equipmentId}', [EquipmentController::class, 'update']);
     Route::delete('/studios/{studioId}/equipment/{equipmentId}', [EquipmentController::class, 'destroy']);
+    
+    // Facility Management
+    Route::get('/studios/{studioId}/facilities', [FacilityController::class, 'index']);
+    Route::post('/studios/{studioId}/facilities', [FacilityController::class, 'store']);
+    Route::put('/studios/{studioId}/facilities/{facilityId}', [FacilityController::class, 'update']);
+    Route::delete('/studios/{studioId}/facilities/{facilityId}', [FacilityController::class, 'destroy']);
     
     // Opening Hours Management
     Route::put('/studios/{studioId}/opening-hours', [OpeningHourController::class, 'update']);
@@ -261,6 +330,17 @@ Route::prefix('v1/owner')->middleware(['auth:sanctum', 'role:owner,super_admin']
     Route::get('/bookings', [BookingController::class, 'ownerBookings']);
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
     Route::post('/bookings/{booking}/complete', [BookingController::class, 'complete']);
+    
+    // Promo Management
+    Route::get('/promos', [OwnerPromoController::class, 'index']);
+    Route::get('/promos/stats', [OwnerPromoController::class, 'stats']);
+    Route::get('/promos/studios', [OwnerPromoController::class, 'studios']);
+    Route::get('/promos/generate-code', [OwnerPromoController::class, 'generateCode']);
+    Route::get('/promos/{promo}', [OwnerPromoController::class, 'show']);
+    Route::post('/promos', [OwnerPromoController::class, 'store']);
+    Route::put('/promos/{promo}', [OwnerPromoController::class, 'update']);
+    Route::delete('/promos/{promo}', [OwnerPromoController::class, 'destroy']);
+    Route::post('/promos/{promo}/toggle', [OwnerPromoController::class, 'toggle']);
     
     // Owner Dashboard & Analytics
     Route::get('/dashboard', [OwnerDashboardController::class, 'index']);
@@ -296,6 +376,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'role:admin,super_admin']
     Route::get('/dashboard', [AdminDashboardController::class, 'index']);
     
     // User Management
+    Route::post('/users', [AdminUserController::class, 'store']);
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::get('/users/stats', [AdminUserController::class, 'stats']);
     Route::get('/users/{user}', [AdminUserController::class, 'show']);
@@ -303,20 +384,33 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'role:admin,super_admin']
     Route::post('/users/{user}/activate', [AdminUserController::class, 'activate']);
     Route::post('/users/{user}/deactivate', [AdminUserController::class, 'deactivate']);
     
+    // Subscriber Management (super admin)
+    Route::get('/subscribers', [SubscriberController::class, 'index']);
+    Route::get('/subscribers/{subscriber}', [SubscriberController::class, 'show']);
+    Route::post('/subscribers/{subscriber}/approve', [SubscriberController::class, 'approve']);
+    Route::post('/subscribers/{subscriber}/reject', [SubscriberController::class, 'reject']);
+    Route::post('/subscribers/{subscriber}/assign-promo', [SubscriberController::class, 'assignPromo']);
+    
     // Studio Management
     Route::get('/studios', [AdminStudioController::class, 'index']);
     Route::get('/studios/stats', [AdminStudioController::class, 'stats']);
     Route::get('/studios/pending', [AdminStudioController::class, 'pendingVerification']);
     Route::get('/studios/{studio}', [AdminStudioController::class, 'show']);
+    Route::get('/subscriptions', [StudioSubscriptionController::class, 'adminIndex']);
+    Route::get('/subscriptions/{ownerId}', [StudioSubscriptionController::class, 'adminShow']);
+    Route::post('/studios/{studio}/subscription', [StudioSubscriptionController::class, 'adminUpdate']);
     Route::post('/studios/{studio}/verify', [AdminStudioController::class, 'verify']);
     Route::post('/studios/{studio}/unverify', [AdminStudioController::class, 'unverify']);
     Route::post('/studios/{studio}/activate', [AdminStudioController::class, 'activate']);
-    Route::post('/studios/{studio}/deactivate', [AdminStudioController::class, 'deactivate']);        // Booking Management
-        Route::get('/bookings', [AdminBookingController::class, 'index']);
-        Route::get('/bookings/stats', [AdminBookingController::class, 'stats']);
-        Route::get('/bookings/{booking}', [AdminBookingController::class, 'show']);
-        Route::post('/bookings/{booking}/confirm', [AdminBookingController::class, 'confirm']);
-        Route::post('/bookings/{booking}/cancel', [AdminBookingController::class, 'cancel']);
+    Route::post('/studios/{studio}/deactivate', [AdminStudioController::class, 'deactivate']);
+
+    // Booking Management
+    Route::get('/bookings', [AdminBookingController::class, 'index']);
+    Route::get('/bookings/stats', [AdminBookingController::class, 'stats']);
+    Route::get('/bookings/{booking}', [AdminBookingController::class, 'show']);
+    Route::post('/bookings/{booking}/confirm', [AdminBookingController::class, 'confirm']);
+    Route::post('/bookings/{booking}/cancel', [AdminBookingController::class, 'cancel']);
+
 
         // Cache Management
         Route::prefix('cache')->group(function () {
@@ -375,6 +469,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'role:admin,super_admin']
             Route::post('/monthly', [EmailReportController::class, 'sendMonthlyReport']);
             Route::post('/regression-alert', [EmailReportController::class, 'sendRegressionAlert']);
             Route::get('/schedule', [EmailReportController::class, 'getScheduleSettings']);
+            Route::put('/schedule', [EmailReportController::class, 'updateScheduleSettings']);
         });
     });
 });

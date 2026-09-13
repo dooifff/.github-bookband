@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/booking_model.dart';
 import '../../providers/payment_provider.dart';
 import '../../utils/formatters.dart';
 import '../home/home_screen.dart';
 import 'booking_success_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class PaymentScreen extends StatefulWidget {
   final Booking booking;
@@ -39,10 +41,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
       'banks': ['GoPay', 'OVO', 'DANA', 'ShopeePay'],
     },
     {
-      'id': 'va',
-      'name': 'Virtual Account',
-      'icon': Icons.payment,
-      'banks': ['BCA VA', 'Mandiri VA', 'BRI VA', 'BNI VA'],
+      // QRIS: metode yang juga diterima backend (lihat PaymentController@store).
+      'id': 'qris',
+      'name': 'QRIS',
+      'icon': Icons.qr_code_2,
+      'banks': ['Semua aplikasi QRIS'],
     },
   ];
 
@@ -210,13 +213,23 @@ class _PaymentScreenState extends State<PaymentScreen> {
       );
 
       if (payment != null && mounted) {
-        // Show payment instruction or redirect
+        // Buka halaman pembayaran Midtrans bila disediakan backend.
+        final paymentUrl = payment['payment_url'] as String?;
+        if (paymentUrl != null && paymentUrl.isNotEmpty) {
+          final uri = Uri.tryParse(paymentUrl);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          }
+        }
+
+        if (!mounted) return;
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => BookingSuccessScreen(
               booking: widget.booking,
-              paymentCode: payment['payment_code'],
+              paymentCode: (payment['payment_code'] ?? '').toString(),
             ),
           ),
         );

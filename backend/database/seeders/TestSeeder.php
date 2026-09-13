@@ -10,6 +10,7 @@ use App\Models\Review;
 use App\Models\Studio;
 use App\Models\StudioRoom;
 use App\Models\User;
+use App\Models\Facility;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -68,6 +69,9 @@ class TestSeeder extends Seeder
             ]);
         }
 
+        // Create facilities (without images - user should upload their own)
+        $this->createFacilities($studio->id);
+
         // Create booking
         $booking = Booking::factory()->create([
             'user_id' => $customer->id,
@@ -103,5 +107,33 @@ class TestSeeder extends Seeder
         $this->command->info('  Admin:    admin@test.com / password');
         $this->command->info('  Owner:    owner@test.com / password');
         $this->command->info('  Customer: customer@test.com / password');
+        $this->command->info('  Studio:   Test Studio (https://studiobook.test/owner/studios)' );
+        $this->command->info('  Facilities: 5 (tanpa gambar - owner harus upload sendiri)');
+    }
+
+    /**
+     * Create facilities for a studio
+     */
+    private function createFacilities(int $studioId): void
+    {
+        $facilityPool = [
+            ['name' => 'AC Ruangan',         'icon' => '❄️', 'description' => 'Ruangan ber-AC agar tetap sejuk saat latihan'],
+            ['name' => 'Sound System Pro',    'icon' => '🔊', 'description' => 'Sound system profesional dengan kualitas jernih'],
+            ['name' => 'Kedap Suara',         'icon' => '🎧', 'description' => 'Dinding kedap suara untuk rekaman terbaik'],
+            ['name' => 'WiFi Cepat',          'icon' => '📶', 'description' => 'Koneksi WiFi dengan kecepatan tinggi'],
+            ['name' => 'Parkir Luas',         'icon' => '🅿️', 'description' => 'Area parkir luas untuk kendaraan'],
+        ];
+
+        foreach ($facilityPool as $index => $facility) {
+            Facility::create([
+                'studio_id'  => $studioId,
+                'name'       => $facility['name'],
+                'icon'       => $facility['icon'],
+                'description' => $facility['description'],
+                'image'      => null, // Tidak pakai gambar dummy - owner harus upload sendiri
+                'is_active'  => true,
+                'sort_order' => $index,
+            ]);
+        }
     }
 }

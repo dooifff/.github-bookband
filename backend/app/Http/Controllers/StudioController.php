@@ -8,7 +8,7 @@ use App\Http\Resources\StudioResource;
 use App\Models\Studio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Cache;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class StudioController extends Controller
@@ -20,7 +20,7 @@ class StudioController extends Controller
     {
         $query = Studio::where('is_active', true)
             ->with(['owner:id,name', 'images' => function ($q) {
-                $q->select('id', 'studio_id', 'url', 'is_primary')->where('is_primary', true);
+                $q->select('id', 'studio_id', 'url')->limit(1);
             }]);
 
         // Search
@@ -62,15 +62,31 @@ class StudioController extends Controller
 
         // Sort
         $sortField = $request->get('sort_by', 'created_at');
-        $sortDirection = $request->get('sort_direction', 'desc');
-        
+        $sortDirection = strtolower($request->get('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        // Mobile uses sort_by=rating|popular|price_low|price_high|newest|name
+        $sortMap = [
+            'rating' => 'average_rating',
+            'newest' => 'created_at',
+            'popular' => 'total_reviews',
+            'price_low' => 'min_price',
+            'price_high' => 'max_price',
+        ];
+        $sortField = $sortMap[$sortField] ?? $sortField;
+
         $allowedSorts = ['name', 'average_rating', 'created_at', 'total_reviews'];
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
+        } elseif ($sortField === 'min_price' || $sortField === 'max_price') {
+            $priceColumn = $sortField === 'min_price' ? 'min_price' : 'max_price';
+            $query->withMin('rooms as min_price', 'price_per_hour')
+                ->withMax('rooms as max_price', 'price_per_hour')
+                ->orderByRaw("{$priceColumn} IS NULL")
+                ->orderBy($priceColumn, $sortField === 'min_price' ? 'asc' : 'desc');
         }
 
         // Pagination
-        $perPage = min($request->get('per_page', 20), 50);
+        $perPage = min($request->get('per_page', $request->get('limit', 20)), 50);
         $studios = $query->paginate($perPage);
 
         return response()->json([
@@ -103,6 +119,9 @@ class StudioController extends Controller
                 'equipment' => function ($q) {
                     $q->where('is_active', true);
                 },
+                'facilities' => function ($q) {
+                    $q->where('is_active', true);
+                },
             ])
             ->firstOrFail();
 
@@ -123,6 +142,7 @@ class StudioController extends Controller
             'images',
             'openingHours',
             'equipment',
+            'facilities',
             'promos' => function ($q) {
                 $q->where('is_active', true);
             },
@@ -226,6 +246,12 @@ class StudioController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
+        // Add rooms_count to each studio (since StudioResource doesn't have it)
+        $studios->getCollection()->each(function ($studio) {
+            $studio->setAttribute('rooms_count', $studio->rooms->count());
+            $studio->setAttribute('active_rooms_count', $studio->rooms->where('is_active', true)->count());
+        });
+
         return response()->json([
             'success' => true,
             'message' => 'Studios retrieved successfully',
@@ -237,5 +263,63 @@ class StudioController extends Controller
                 'total' => $studios->total(),
             ],
         ]);
+    }
+
+    /**
+     * Upload image for owner's studio
+     */
+    public function uploadImage(Request $request, int $studioId): JsonResponse
+    {
+        $studio = Studio::findOrFail($studioId);
+
+        if ($studio->owner_id !== $request->user()->id) {
+            return $this->errorResponse('Anda tidak memiliki akses', 403);
+        }
+
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
+            'caption' => ['nullable', 'string', 'max:255'],
+            'is_primary' => ['sometimes', 'boolean'],
+        ]);
+
+        $path = $request->file('image')->store('studio-images', 'public');
+        $url = Storage::disk('public')->url($path);
+
+        $image = StudioImage::create([
+            'studio_id' => $studioId,
+            'url' => $url,
+            'caption' => $request->caption,
+            'is_primary' => $request->boolean('is_primary', false),
+            'sort_order' => 0,
+        ]);
+
+        // Invalidate cache
+        Cache::forget('studios_listing');
+
+        return $this->successResponse(
+            new StudioImageResource($image),
+            'Gambar studio berhasil diupload',
+            201
+        );
+    }
+
+    /**
+     * Delete studio image
+     */
+    public function deleteImage(Request $request, int $studioId, int $imageId): JsonResponse
+    {
+        $studio = Studio::findOrFail($studioId);
+
+        if ($studio->owner_id !== $request->user()->id) {
+            return $this->errorResponse('Anda tidak memiliki akses', 403);
+        }
+
+        $image = StudioImage::where('studio_id', $studioId)->findOrFail($imageId);
+        Storage::disk('public')->delete(str_replace(Storage::disk('public')->url('/'), '', $image->url));
+        $image->delete();
+
+        Cache::forget('studios_listing');
+
+        return $this->successResponse(null, 'Gambar studio berhasil dihapus');
     }
 }

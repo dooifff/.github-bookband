@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Band;
 use App\Models\BandMember;
 use App\Models\Booking;
+use App\Models\Facility;
 use App\Models\Favorite;
 use App\Models\Notification;
 use App\Models\OpeningHour;
@@ -79,6 +80,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('  - ' . User::count() . ' users');
         $this->command->info('  - ' . Studio::count() . ' studios');
         $this->command->info('  - ' . StudioRoom::count() . ' rooms');
+        $this->command->info('  - ' . Facility::count() . ' facilities');
         $this->command->info('  - ' . Booking::count() . ' bookings');
         $this->command->info('  - ' . Review::count() . ' reviews');
         $this->command->info('  - ' . Favorite::count() . ' favorites');
@@ -184,6 +186,41 @@ class DatabaseSeeder extends Seeder
                     'is_closed' => $day == 7, // Sunday closed
                 ]);
             }
+
+            // Create facilities (3-5 per studio)
+            $this->createFacilities($studio->id);
+        }
+    }
+
+    /**
+     * Create facilities for a studio
+     */
+    private function createFacilities(int $studioId): void
+    {
+        $facilityPool = [
+            ['name' => 'AC Ruangan', 'icon' => '❄️', 'description' => 'Ruangan ber-AC agar tetap sejuk saat latihan'],
+            ['name' => 'Parkir Luas', 'icon' => '🅿️', 'description' => 'Area parkir luas untuk kendaraan roda dua dan empat'],
+            ['name' => 'Sound System Profesional', 'icon' => '🔊', 'description' => 'Sound system dengan kualitas jernih'],
+            ['name' => 'Kedap Suara', 'icon' => '🎧', 'description' => 'Dinding kedap suara untuk kualitas rekaman terbaik'],
+            ['name' => 'WiFi Cepat', 'icon' => '📶', 'description' => 'Koneksi WiFi dengan kecepatan tinggi'],
+            ['name' => 'Toilet Bersih', 'icon' => '🚻', 'description' => 'Toilet bersih di dalam area studio'],
+            ['name' => 'Ruang Tunggu', 'icon' => '🛋️', 'description' => 'Ruang tunggu nyaman untuk tamu dan kru'],
+            ['name' => 'Pantry & Kopi', 'icon' => '☕', 'description' => 'Fasilitas pantry lengkap dengan kopi gratis'],
+            ['name' => 'CCTV 24 Jam', 'icon' => '📹', 'description' => 'Keamanan 24 jam dengan pantauan CCTV'],
+            ['name' => 'Alat Musik Lengkap', 'icon' => '🎸', 'description' => 'Tersedia berbagai alat musik untuk dipakai'],
+        ];
+
+        $selected = collect($facilityPool)->shuffle()->take(rand(3, 5));
+
+        foreach ($selected as $index => $facility) {
+            Facility::create([
+                'studio_id' => $studioId,
+                'name' => $facility['name'],
+                'description' => $facility['description'],
+                'icon' => $facility['icon'],
+                'is_active' => true,
+                'sort_order' => $index,
+            ]);
         }
     }
 

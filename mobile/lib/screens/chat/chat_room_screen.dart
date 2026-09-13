@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
-import '../../repositories/auth_repository.dart';
+import '../../providers/auth_provider.dart';
+import '../../repositories/chat_repository.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final int roomId;
@@ -50,8 +51,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
 
     try {
-      final authRepository = context.read<AuthRepository>();
-      final response = await authRepository.getChatMessages(
+      final chatRepository = context.read<ChatRepository>();
+      final response = await chatRepository.getChatMessages(
         widget.roomId,
         page: loadMore ? _currentPage + 1 : 1,
       );
@@ -70,7 +71,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
       });
 
       // Mark as read
-      await authRepository.markChatAsRead(widget.roomId);
+      await chatRepository.markChatAsRead(widget.roomId);
 
       // Scroll to bottom after loading
       if (!loadMore) {
@@ -97,8 +98,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
 
     try {
-      final authRepository = context.read<AuthRepository>();
-      final response = await authRepository.sendChatMessage(
+      final chatRepository = context.read<ChatRepository>();
+      final response = await chatRepository.sendChatMessage(
         widget.roomId,
         message,
       );
@@ -254,7 +255,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   Widget _buildMessageBubble(Map<String, dynamic> message) {
-    final currentUserId = context.read<AuthRepository>().currentUserId;
+    final currentUserId = context.read<AuthProvider>().user?.id;
     final isMe = message['sender_id'] == currentUserId;
     final isRead = message['is_read'] ?? false;
 
@@ -306,7 +307,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     message['message'] ?? '',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isMe ? Colors.white : AppTheme.textPrimary,,
+                      color: isMe ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -318,7 +319,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         style: TextStyle(
                           fontSize: 10,
                           color: isMe
-                              ? AppTheme.textSecondary,
+                              ? AppTheme.textSecondary
                               : AppTheme.textMuted,
                         ),
                       ),
@@ -327,7 +328,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         Icon(
                           isRead ? Icons.done_all : Icons.done,
                           size: 14,
-                          color: AppTheme.textSecondary,,
+                          color: AppTheme.textSecondary,
                         ),
                       ],
                     ],

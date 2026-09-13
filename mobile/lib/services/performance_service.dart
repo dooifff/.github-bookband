@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:io';
+import '../utils/platform_memory.dart'
+    if (dart.library.io) '../utils/platform_memory_io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
 /// Performance metrics data class
 class PerformanceMetrics {
   final double fps;
-  final Duration平均FrameTime;
+  final Duration averageFrameTime;
   final int missedFrames;
   final double memoryUsageMB;
   final int gpuCacheBytes;
@@ -17,7 +18,7 @@ class PerformanceMetrics {
 
   PerformanceMetrics({
     required this.fps,
-    required this平均FrameTime,
+    required this.averageFrameTime,
     required this.missedFrames,
     required this.memoryUsageMB,
     required this.gpuCacheBytes,
@@ -26,9 +27,16 @@ class PerformanceMetrics {
     required this.totalScreenLoads,
   });
 
+  /// Share of frames that missed their deadline during the sampling window.
+  double getFrameDropPercentage() {
+    final totalFrames = fps.round() + missedFrames;
+    if (totalFrames <= 0) return 0;
+    return (missedFrames / totalFrames) * 100;
+  }
+
   Map<String, dynamic> toJson() => {
     'fps': fps,
-    'avg_frame_time_ms': 平均FrameTime.inMilliseconds,
+    'avg_frame_time_ms': averageFrameTime.inMilliseconds,
     'missed_frames': missedFrames,
     'memory_usage_mb': memoryUsageMB,
     'gpu_cache_bytes': gpuCacheBytes,
@@ -117,9 +125,8 @@ class PerformanceService {
   /// Update memory usage
   void _updateMemoryUsage() {
     try {
-      // Get current process info
-      final info = ProcessInfo.current;
-      _memoryUsageMB = info.maxRss / (1024 * 1024); // Convert to MB
+      // Get current process memory (0 on platforms without dart:io, e.g. web)
+      _memoryUsageMB = currentRssBytes() / (1024 * 1024); // Convert to MB
     } catch (e) {
       // Fallback - use Flutter's memory info
       if (kDebugMode) {
@@ -207,7 +214,7 @@ class PerformanceService {
 
     return PerformanceMetrics(
       fps: _currentFPS,
-      平均FrameTime: avgFrameTime,
+      averageFrameTime: avgFrameTime,
       missedFrames: _missedFrames,
       memoryUsageMB: _memoryUsageMB,
       gpuCacheBytes: 0, // Would need platform channel for accurate GPU cache
@@ -263,7 +270,7 @@ class PerformanceService {
 ║         PERFORMANCE SUMMARY                      ║
 ╠══════════════════════════════════════════════════╣
 ║ FPS: ${metrics.fps.toStringAsFixed(1).padLeft(6)} (${getFPSRating().padRight(10)})     ║
-║ Avg Frame Time: ${metrics.平均FrameTime.inMilliseconds.toString().padLeft(4)}ms                    ║
+║ Avg Frame Time: ${metrics.averageFrameTime.inMilliseconds.toString().padLeft(4)}ms                    ║
 ║ Missed Frames: ${metrics.missedFrames.toString().padLeft(6)} (${getFrameDropPercentage().toStringAsFixed(1)}%)        ║
 ║ Memory: ${metrics.memoryUsageMB.toStringAsFixed(1).padLeft(6)}MB                       ║
 ║ Startup: ${metrics.startupTime.inMilliseconds.toString().padLeft(6)}ms                    ║

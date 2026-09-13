@@ -21,7 +21,7 @@ class AuthRepository {
     });
 
     return {
-      'user': UserModel.fromJson(response['data']['user']),
+      'user': User.fromJson(response['data']['user']),
       'token': response['data']['token'],
     };
   }
@@ -37,8 +37,25 @@ class AuthRepository {
     });
 
     return {
-      'user': UserModel.fromJson(response['data']['user']),
+      'user': User.fromJson(response['data']['user']),
       'token': response['data']['token'],
+    };
+  }
+
+  /// Login/register dengan Google (ID token diverifikasi backend)
+  Future<Map<String, dynamic>> googleLogin({
+    required String idToken,
+    String? role,
+  }) async {
+    final response = await _api.post('/auth/google', data: {
+      'id_token': idToken,
+      if (role != null) 'role': role,
+    });
+
+    return {
+      'user': User.fromJson(response['data']['user']),
+      'token': response['data']['token'],
+      'is_new_user': response['data']['is_new_user'] ?? false,
     };
   }
 
@@ -48,13 +65,13 @@ class AuthRepository {
   }
 
   /// Get current user
-  Future<UserModel> getProfile() async {
+  Future<User> getProfile() async {
     final response = await _api.get('/auth/me');
-    return UserModel.fromJson(response['data']);
+    return User.fromJson(response['data']);
   }
 
   /// Update profile
-  Future<UserModel> updateProfile({
+  Future<User> updateProfile({
     String? name,
     String? email,
     String? phone,
@@ -65,7 +82,7 @@ class AuthRepository {
       if (phone != null) 'phone': phone,
     });
 
-    return UserModel.fromJson(response['data']);
+    return User.fromJson(response['data']);
   }
 
   /// Update password

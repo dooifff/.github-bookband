@@ -20,6 +20,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
         'phone',
         'avatar',
@@ -57,11 +58,11 @@ class User extends Authenticatable
     */
 
     /**
-     * User's bookings
+     * User's subscriber records (studios they subscribed to)
      */
-    public function bookings()
+    public function subscriptions()
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Subscriber::class, 'user_id');
     }
 
     /**
@@ -86,7 +87,7 @@ class User extends Authenticatable
     public function bands()
     {
         return $this->belongsToMany(Band::class, 'band_members')
-            ->withPivot('role', 'joined_at')
+            ->withPivot('role', 'status')
             ->withTimestamps();
     }
 

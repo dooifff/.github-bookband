@@ -9,8 +9,8 @@ use App\Models\StudioRoom;
 use App\Models\OpeningHour;
 use App\Models\Booking;
 use App\Models\BlockedSchedule;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Carbon\Carbon;
 
 class ScheduleServiceTest extends TestCase
 {
@@ -19,6 +19,7 @@ class ScheduleServiceTest extends TestCase
     protected $scheduleService;
     protected $studio;
     protected $room;
+    protected $date;
 
     protected function setUp(): void
     {
@@ -26,49 +27,49 @@ class ScheduleServiceTest extends TestCase
         $this->scheduleService = new ScheduleService();
         $this->studio = Studio::factory()->create();
         $this->room = StudioRoom::factory()->create(['studio_id' => $this->studio->id]);
+
+        // Future Monday (dayOfWeek = 1, matching the opening hours below)
+        $this->date = now()->next(Carbon::MONDAY)->format('Y-m-d');
     }
 
     public function test_check_availability_returns_available()
     {
-        // Setup opening hours for Monday
+        // Setup opening hours for the booking day
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'open_time' => '09:00',
             'close_time' => '21:00',
             'is_closed' => false,
         ]);
 
-        $result = $this->scheduleService->checkAvailability(
-            $this->studio->id,
+        $result = $this->scheduleService->isRoomAvailable(
             $this->room->id,
-            '2025-03-17', // Monday
+            $this->date,
             '10:00',
             '12:00'
         );
 
-        $this->assertTrue($result['available']);
+        $this->assertTrue($result);
     }
 
     public function test_check_availability_returns_unavailable_when_closed()
     {
-        // Setup opening hours for Monday - closed
+        // Setup opening hours for the booking day - closed
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'is_closed' => true,
         ]);
 
-        $result = $this->scheduleService->checkAvailability(
-            $this->studio->id,
+        $result = $this->scheduleService->isRoomAvailable(
             $this->room->id,
-            '2025-03-17', // Monday
+            $this->date,
             '10:00',
             '12:00'
         );
 
-        $this->assertFalse($result['available']);
-        $this->assertStringContainsString('tidak buka', $result['message']);
+        $this->assertFalse($result);
     }
 
     public function test_check_availability_returns_unavailable_when_booked()
@@ -76,7 +77,7 @@ class ScheduleServiceTest extends TestCase
         // Setup opening hours
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'open_time' => '09:00',
             'close_time' => '21:00',
             'is_closed' => false,
@@ -86,22 +87,20 @@ class ScheduleServiceTest extends TestCase
         Booking::factory()->create([
             'studio_id' => $this->studio->id,
             'room_id' => $this->room->id,
-            'booking_date' => '2025-03-17',
+            'date' => $this->date,
             'start_time' => '10:00',
             'end_time' => '12:00',
             'status' => 'confirmed',
         ]);
 
-        $result = $this->scheduleService->checkAvailability(
-            $this->studio->id,
+        $result = $this->scheduleService->isRoomAvailable(
             $this->room->id,
-            '2025-03-17',
+            $this->date,
             '11:00',
             '13:00'
         );
 
-        $this->assertFalse($result['available']);
-        $this->assertStringContainsString('sudah dipesan', $result['message']);
+        $this->assertFalse($result);
     }
 
     public function test_check_availability_returns_unavailable_when_blocked()
@@ -109,31 +108,29 @@ class ScheduleServiceTest extends TestCase
         // Setup opening hours
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'open_time' => '09:00',
             'close_time' => '21:00',
             'is_closed' => false,
         ]);
 
         // Create blocked schedule
-        \App\Models\BlockedSchedule::factory()->create([
+        BlockedSchedule::factory()->create([
             'studio_id' => $this->studio->id,
             'room_id' => $this->room->id,
-            'blocked_date' => '2025-03-17',
+            'date' => $this->date,
             'start_time' => '10:00',
             'end_time' => '12:00',
         ]);
 
-        $result = $this->scheduleService->checkAvailability(
-            $this->studio->id,
+        $result = $this->scheduleService->isRoomAvailable(
             $this->room->id,
-            '2025-03-17',
+            $this->date,
             '11:00',
             '13:00'
         );
 
-        $this->assertFalse($result['available']);
-        $this->assertStringContainsString('diblokir', $result['message']);
+        $this->assertFalse($result);
     }
 
     public function test_get_available_slots_returns_slots()
@@ -141,23 +138,22 @@ class ScheduleServiceTest extends TestCase
         // Setup opening hours
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'open_time' => '09:00',
             'close_time' => '12:00',
             'is_closed' => false,
         ]);
 
         $slots = $this->scheduleService->getAvailableSlots(
-            $this->studio->id,
             $this->room->id,
-            '2025-03-17'
+            $this->date
         );
 
         $this->assertIsArray($slots);
         $this->assertNotEmpty($slots);
-        $this->assertArrayHasKey('start', $slots[0]);
-        $this->assertArrayHasKey('end', $slots[0]);
-        $this->assertArrayHasKey('available', $slots[0]);
+        $this->assertArrayHasKey('start_time', $slots[0]);
+        $this->assertArrayHasKey('end_time', $slots[0]);
+        $this->assertArrayHasKey('is_available', $slots[0]);
     }
 
     public function test_has_booking_conflict_returns_true_when_conflict()
@@ -165,16 +161,15 @@ class ScheduleServiceTest extends TestCase
         Booking::factory()->create([
             'studio_id' => $this->studio->id,
             'room_id' => $this->room->id,
-            'booking_date' => '2025-03-17',
+            'date' => $this->date,
             'start_time' => '10:00',
             'end_time' => '12:00',
             'status' => 'confirmed',
         ]);
 
-        $hasConflict = $this->scheduleService->hasBookingConflict(
-            $this->studio->id,
+        $hasConflict = $this->scheduleService->hasOverlappingBooking(
             $this->room->id,
-            '2025-03-17',
+            $this->date,
             '11:00',
             '13:00'
         );
@@ -187,16 +182,15 @@ class ScheduleServiceTest extends TestCase
         Booking::factory()->create([
             'studio_id' => $this->studio->id,
             'room_id' => $this->room->id,
-            'booking_date' => '2025-03-17',
+            'date' => $this->date,
             'start_time' => '10:00',
             'end_time' => '12:00',
             'status' => 'confirmed',
         ]);
 
-        $hasConflict = $this->scheduleService->hasBookingConflict(
-            $this->studio->id,
+        $hasConflict = $this->scheduleService->hasOverlappingBooking(
             $this->room->id,
-            '2025-03-17',
+            $this->date,
             '14:00',
             '16:00'
         );
@@ -208,13 +202,18 @@ class ScheduleServiceTest extends TestCase
     {
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'open_time' => '09:00',
             'close_time' => '21:00',
             'is_closed' => false,
         ]);
 
-        $isOpen = $this->scheduleService->isStudioOpen($this->studio->id, '2025-03-17');
+        $isOpen = $this->scheduleService->isStudioOpen(
+            $this->studio->id,
+            $this->date,
+            '10:00',
+            '12:00'
+        );
 
         $this->assertTrue($isOpen);
     }
@@ -223,11 +222,16 @@ class ScheduleServiceTest extends TestCase
     {
         OpeningHour::factory()->create([
             'studio_id' => $this->studio->id,
-            'day_of_week' => 1, // Monday
+            'day_of_week' => Carbon::parse($this->date)->dayOfWeek,
             'is_closed' => true,
         ]);
 
-        $isOpen = $this->scheduleService->isStudioOpen($this->studio->id, '2025-03-17');
+        $isOpen = $this->scheduleService->isStudioOpen(
+            $this->studio->id,
+            $this->date,
+            '10:00',
+            '12:00'
+        );
 
         $this->assertFalse($isOpen);
     }

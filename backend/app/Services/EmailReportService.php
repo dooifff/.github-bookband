@@ -75,7 +75,7 @@ class EmailReportService
     /**
      * Send weekly report to all admins
      */
-    public function sendWeeklyReport(): array
+    public function sendWeeklyReport(?string $recipient = null): array
     {
         $results = [
             'sent' => 0,
@@ -83,10 +83,12 @@ class EmailReportService
             'recipients' => [],
         ];
 
-        // Get admin emails from config
-        $recipients = config('performance.email_recipients', [
-            config('performance.alert_email', 'admin@studiobook.com'),
-        ]);
+        // Get admin emails from config (or use the explicit recipient)
+        $recipients = $recipient
+            ? [$recipient]
+            : config('performance.email_recipients', [
+                config('performance.alert_email', 'admin@studiobook.com'),
+            ]);
 
         // Calculate date ranges (last 7 days vs previous 7 days)
         $period1End = now()->subWeek()->toDateString();
@@ -258,11 +260,19 @@ class EmailReportService
     }
 
     /**
-     * Get scheduled email report settings
+     * Path to persisted schedule settings
+     */
+    protected function scheduleFilePath(): string
+    {
+        return storage_path('app/email-schedule.json');
+    }
+
+    /**
+     * Get scheduled email report settings (persisted overrides merged over config)
      */
     public function getScheduleSettings(): array
     {
-        return [
+        $defaults = [
             'daily' => [
                 'enabled' => config('performance.email_schedule.daily', false),
                 'time' => config('performance.email_schedule.daily_time', '08:00'),
@@ -281,5 +291,44 @@ class EmailReportService
                 'recipients' => config('performance.email_recipients', []),
             ],
         ];
+
+        $file = $this->scheduleFilePath();
+        if (is_file($file)) {
+            $persisted = json_decode(file_get_contents($file), true);
+            if (is_array($persisted)) {
+                foreach (['daily', 'weekly', 'monthly'] as $key) {
+                    if (isset($persisted[$key]) && is_array($persisted[$key])) {
+                        $defaults[$key] = array_merge($defaults[$key], $persisted[$key]);
+                    }
+                }
+            }
+        }
+
+        return $defaults;
+    }
+
+    /**
+     * Persist email schedule settings
+     */
+    public function updateScheduleSettings(array $settings): array
+    {
+        $current = $this->getScheduleSettings();
+
+        foreach (['daily', 'weekly', 'monthly'] as $key) {
+            if (!isset($settings[$key]) || !is_array($settings[$key])) {
+                continue;
+            }
+
+            // Only allow known keys to be overridden
+            $merged = array_intersect_key($settings[$key], array_flip(['enabled', 'time', 'day', 'recipients']));
+            $current[$key] = array_merge($current[$key], $merged);
+        }
+
+        file_put_contents(
+            $this->scheduleFilePath(),
+            json_encode($current, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        return $current;
     }
 }

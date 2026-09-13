@@ -52,7 +52,7 @@ class PaymentController extends Controller
                     'amount' => $payment->amount,
                     'status' => $payment->status,
                     'payment_url' => $payment->payment_url,
-                    'snap_token' => $payment->provider_reference,
+                    'snap_token' => $payment->provider_payment_id,
                     'expired_at' => $payment->expired_at?->toISOString(),
                 ],
             ], 201);

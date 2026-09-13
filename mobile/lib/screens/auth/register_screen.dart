@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/validators.dart';
-import '../home/home_screen.dart';
+import '../../widgets/google_sign_in_button.dart';
+
+/// Pendaftaran akun **customer**.
+///
+/// Akun owner tidak dibuat dari sini: owner dibuat oleh admin lewat dashboard
+/// (`POST /api/v1/admin/users`).
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -44,14 +50,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      context.go('/');
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Registration failed'),
+          content: Text(authProvider.error ?? 'Pendaftaran gagal'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
+    }
+  }
+
+  Future<void> _registerWithGoogle() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.loginWithGoogle(role: 'customer');
+
+    if (!mounted) return;
+
+    if (success) {
+      context.go('/');
+      return;
+    }
+
+    final error = authProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
           backgroundColor: AppTheme.danger,
         ),
       );
@@ -68,7 +93,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/login'),
         ),
       ),
       body: Stack(
@@ -134,11 +160,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Find and book the best studios',
+                      'Buat akun customer untuk booking studio favoritmu',
                       style: TextStyle(fontSize: 14, color: AppTheme.textMuted),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 12),
+
+                    // Akun owner hanya bisa dibuat oleh admin.
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.info.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.info.withOpacity(0.2)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline, color: AppTheme.info, size: 18),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Akun pemilik studio (owner) dibuat oleh admin. '
+                              'Hubungi admin bila ingin mendaftarkan studio.',
+                              style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
 
                     // Name
                     _buildField(
@@ -250,6 +300,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     const SizedBox(height: 16),
 
+                    // Google Sign-Up - akun Google langsung dibuatkan akun customer
+                    Consumer<AuthProvider>(
+                      builder: (context, auth, _) => GoogleSignInButton(
+                        isLoading: auth.isLoading,
+                        onPressed: _registerWithGoogle,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
                     // Login link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -259,7 +318,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
                         ),
                         GestureDetector(
-                          onTap: () => Navigator.pop(context),
+                          onTap: () =>
+                              context.canPop() ? context.pop() : context.go('/login'),
                           child: const Text(
                             'Sign In',
                             style: TextStyle(

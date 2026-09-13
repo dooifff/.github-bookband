@@ -1,13 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// A [Color] that also supports Material-style shade indexing, e.g.
+/// `AppTheme.accent[50]`. Shades are tuned for the dark luxury palette, so
+/// low indexes are subtle gold/color tints over the dark surfaces.
+class ShadedColor extends Color {
+  final Map<int, Color> shades;
+
+  const ShadedColor(int value, this.shades) : super(value);
+
+  Color operator [](int shade) => shades[shade] ?? this;
+}
+
 class AppTheme {
   // ═══════════════════════════════════════════════
   // Core Palette — Premium Dark Luxury
   // ═══════════════════════════════════════════════
   static const Color primary = Color(0xFF050508);
   static const Color secondary = Color(0xFF0A0A10);
-  static const Color accent = Color(0xFFD4AF37);
+  static const ShadedColor accent = ShadedColor(0xFFD4AF37, {
+    50: Color(0x14D4AF37),
+    100: Color(0x1FD4AF37),
+    200: Color(0x33D4AF37),
+    600: Color(0xFFE6C247),
+    700: Color(0xFFE6C247),
+    800: Color(0xFFB8960E),
+  });
   static const Color accentHover = Color(0xFFE6C247);
   static const Color accentDark = Color(0xFFB8960E);
 
@@ -29,7 +47,12 @@ class AppTheme {
   static const Color textAccent = Color(0xFFD4AF37);
 
   // Semantic
-  static const Color success = Color(0xFF22C55E);
+  static const ShadedColor success = ShadedColor(0xFF22C55E, {
+    50: Color(0x1422C55E),
+    100: Color(0x1F22C55E),
+    700: Color(0xFF4ADE80),
+    800: Color(0xFF15803D),
+  });
   static const Color warning = Color(0xFFEAB308);
   static const Color danger = Color(0xFFEF4444);
   static const Color info = Color(0xFF3B82F6);
@@ -117,7 +140,7 @@ class AppTheme {
         titleTextStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: textPrimary),
       ),
 
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -195,7 +218,7 @@ class AppTheme {
         ),
       ),
 
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(

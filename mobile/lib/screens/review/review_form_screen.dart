@@ -1,9 +1,18 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
-import '../../repositories/auth_repository.dart';
+import '../../repositories/review_repository.dart';
+
+/// A picked photo plus its bytes, so previews work on web as well as on
+/// mobile (where `dart:io` would be needed to read the file back).
+class _PickedImage {
+  final XFile file;
+  final Uint8List bytes;
+
+  _PickedImage(this.file, this.bytes);
+}
 
 class ReviewFormScreen extends StatefulWidget {
   final int studioId;
@@ -21,7 +30,7 @@ class ReviewFormScreen extends StatefulWidget {
 
 class _ReviewFormScreenState extends State<ReviewFormScreen> {
   final TextEditingController _commentController = TextEditingController();
-  final List<File> _selectedImages = [];
+  final List<_PickedImage> _selectedImages = [];
   final List<String> _imageCaptions = [];
   int _rating = 0;
   bool _isAnonymous = false;
@@ -45,8 +54,12 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
       );
 
       if (images.isNotEmpty) {
+        final picked = <_PickedImage>[];
+        for (final image in images) {
+          picked.add(_PickedImage(image, await image.readAsBytes()));
+        }
         setState(() {
-          _selectedImages.addAll(images.map((img) => File(img.path)));
+          _selectedImages.addAll(picked);
         });
       }
     } catch (e) {
@@ -69,6 +82,17 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
   }
 
   Future<void> _submitReview() async {
+    // Backend hanya menerima ulasan yang terhubung ke booking milik user.
+    if (widget.bookingId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ulasan hanya bisa ditulis dari booking yang sudah selesai'),
+          backgroundColor: AppTheme.danger,
+        ),
+      );
+      return;
+    }
+
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -85,10 +109,10 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
     });
 
     try {
-      final authRepository = context.read<AuthRepository>();
+      final reviewRepository = context.read<ReviewRepository>();
       
       // Create review
-      final response = await authRepository.createReview(
+      final response = await reviewRepository.createReview(
         studioId: widget.studioId,
         bookingId: widget.bookingId,
         rating: _rating,
@@ -100,9 +124,9 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
 
       // Upload images if any
       if (_selectedImages.isNotEmpty) {
-        await authRepository.uploadReviewImages(
+        await reviewRepository.uploadReviewImages(
           reviewId,
-          _selectedImages,
+          _selectedImages.map((image) => image.file).toList(),
           _imageCaptions.where((c) => c.isNotEmpty).toList(),
         );
       }
@@ -306,8 +330,8 @@ class _ReviewFormScreenState extends State<ReviewFormScreen> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            _selectedImages[index],
+                          child: Image.memory(
+                            _selectedImages[index].bytes,
                             width: 100,
                             height: 100,
                             fit: BoxFit.cover,

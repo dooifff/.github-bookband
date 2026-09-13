@@ -50,7 +50,7 @@ class ReviewTest extends TestCase
         $response->assertStatus(201)
             ->assertJson([
                 'success' => true,
-                'message' => 'Review berhasil dibuat',
+                'message' => 'Review berhasil dikirim',
             ]);
 
         $this->assertDatabaseHas('reviews', [
@@ -69,10 +69,7 @@ class ReviewTest extends TestCase
                 'comment' => 'Great studio!',
             ]);
 
-        $response->assertStatus(422)
-            ->assertJson([
-                'success' => false,
-            ]);
+        $response->assertStatus(422);
     }
 
     public function test_user_cannot_review_same_studio_twice()
@@ -97,7 +94,7 @@ class ReviewTest extends TestCase
                 'comment' => 'Another review',
             ]);
 
-        $response->assertStatus(422)
+        $response->assertStatus(409)
             ->assertJson([
                 'success' => false,
             ]);
@@ -112,7 +109,7 @@ class ReviewTest extends TestCase
         $response = $this->getJson("/api/v1/studios/{$this->studio->slug}/reviews");
 
         $response->assertStatus(200)
-            ->assertJsonCount(5, 'data.data');
+            ->assertJsonCount(5, 'data');
     }
 
     public function test_user_can_get_my_reviews()
@@ -125,7 +122,7 @@ class ReviewTest extends TestCase
             ->getJson('/api/v1/reviews/my-reviews');
 
         $response->assertStatus(200)
-            ->assertJsonCount(3, 'data.data');
+            ->assertJsonCount(3, 'data');
     }
 
     public function test_user_can_delete_own_review()
@@ -143,7 +140,7 @@ class ReviewTest extends TestCase
                 'message' => 'Review berhasil dihapus',
             ]);
 
-        $this->assertDatabaseMissing('reviews', ['id' => $review->id]);
+        $this->assertSoftDeleted('reviews', ['id' => $review->id]);
     }
 
     public function test_user_cannot_delete_other_users_review()

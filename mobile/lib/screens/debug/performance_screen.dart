@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../services/performance_service.dart';
 import '../../utils/performance_profiler.dart';
+import '../../core/theme/app_theme.dart';
 
 /// Debug screen for viewing performance metrics
 class PerformanceScreen extends StatefulWidget {
@@ -387,7 +388,7 @@ class _PerformanceScreenState extends State<PerformanceScreen> {
               const SnackBar(content: Text('Summary logged to console')),
             );
           },
-          icon: const Icon(Icons.console),
+          icon: const Icon(Icons.terminal),
           label: const Text('Log Summary'),
         ),
         ElevatedButton.icon(

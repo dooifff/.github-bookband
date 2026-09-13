@@ -25,9 +25,7 @@ class StudioTest extends TestCase
             ])
             ->assertJsonStructure([
                 'data' => [
-                    'data' => [
-                        '*' => ['id', 'name', 'slug', 'city', 'province'],
-                    ],
+                    '*' => ['id', 'name', 'slug', 'city', 'province'],
                 ],
             ]);
     }
@@ -40,7 +38,7 @@ class StudioTest extends TestCase
         $response = $this->getJson('/api/v1/studios?search=musik');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(1, 'data');
     }
 
     public function test_user_can_filter_studios_by_city()
@@ -51,7 +49,7 @@ class StudioTest extends TestCase
         $response = $this->getJson('/api/v1/studios?city=Jakarta');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1, 'data.data');
+            ->assertJsonCount(1, 'data');
     }
 
     public function test_user_can_get_studio_by_slug()
@@ -158,7 +156,7 @@ class StudioTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Studio berhasil diupdate',
+                'message' => 'Studio berhasil diperbarui',
             ]);
 
         $this->assertDatabaseHas('studios', [

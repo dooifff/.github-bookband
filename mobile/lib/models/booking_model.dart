@@ -1,5 +1,6 @@
 class Booking {
   final int id;
+  final String bookingCode;
   final int userId;
   final int roomId;
   final int studioId;
@@ -21,6 +22,7 @@ class Booking {
 
   Booking({
     required this.id,
+    required this.bookingCode,
     required this.userId,
     required this.roomId,
     required this.studioId,
@@ -42,34 +44,46 @@ class Booking {
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
+    // The API nests pricing under "pricing" and may omit the flat foreign keys
+    // in favour of the loaded relations.
+    final pricing = json['pricing'] as Map<String, dynamic>?;
+    final room = json['room'] as Map<String, dynamic>?;
+    final studio = json['studio'] as Map<String, dynamic>?;
+
     return Booking(
       id: json['id'],
-      userId: json['user_id'],
-      roomId: json['room_id'],
-      studioId: json['studio_id'],
-      date: json['date'],
-      startTime: json['start_time'],
-      endTime: json['end_time'],
-      durationHours: json['duration_hours'],
-      subtotal: (json['subtotal'] ?? 0).toDouble(),
-      discount: (json['discount'] ?? 0).toDouble(),
-      total: (json['total'] ?? 0).toDouble(),
-      status: json['status'],
+      bookingCode: json['booking_code'] ?? '',
+      userId: json['user_id'] ?? (json['user'] as Map<String, dynamic>?)?['id'] ?? 0,
+      roomId: json['room_id'] ?? room?['id'] ?? 0,
+      studioId: json['studio_id'] ?? studio?['id'] ?? 0,
+      date: json['date'] ?? '',
+      startTime: json['start_time'] ?? '',
+      endTime: json['end_time'] ?? '',
+      durationHours: json['duration_hours'] ?? 0,
+      subtotal: ((pricing?['subtotal'] ?? json['subtotal']) ?? 0).toDouble(),
+      discount: ((pricing?['discount'] ?? json['discount']) ?? 0).toDouble(),
+      total: ((pricing?['total'] ?? json['total']) ?? 0).toDouble(),
+      status: json['status'] ?? 'pending',
       notes: json['notes'],
-      cancelReason: json['cancel_reason'],
+      cancelReason: json['cancel_reason'] ?? json['cancellation_reason'],
       cancelledAt: json['cancelled_at'] != null
           ? DateTime.parse(json['cancelled_at'])
           : null,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      room: json['room'] != null ? BookingRoom.fromJson(json['room']) : null,
-      studio: json['studio'] != null ? BookingStudio.fromJson(json['studio']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : DateTime.now(),
+      room: room != null ? BookingRoom.fromJson(room) : null,
+      studio: studio != null ? BookingStudio.fromJson(studio) : null,
     );
   }
   
   Booking copyWith({String? status}) {
     return Booking(
       id: id,
+      bookingCode: bookingCode,
       userId: userId,
       roomId: roomId,
       studioId: studioId,
@@ -94,6 +108,7 @@ class Booking {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'booking_code': bookingCode,
       'user_id': userId,
       'room_id': roomId,
       'studio_id': studioId,
@@ -114,6 +129,12 @@ class Booking {
   }
   
   String get formattedTotal => 'Rp ${total.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
+
+  /// Convenience aliases used across the booking UI.
+  double get totalAmount => total;
+
+  /// Human readable booking date (already stored as `yyyy-MM-dd`).
+  String get bookingDate => date;
   
   String get statusLabel {
     switch (status) {
@@ -145,9 +166,9 @@ class BookingRoom {
   
   factory BookingRoom.fromJson(Map<String, dynamic> json) {
     return BookingRoom(
-      id: json['id'],
-      name: json['name'],
-      capacity: json['capacity'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      capacity: json['capacity'] ?? 0,
     );
   }
 }
@@ -165,8 +186,8 @@ class BookingStudio {
   
   factory BookingStudio.fromJson(Map<String, dynamic> json) {
     return BookingStudio(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
       logo: json['logo'],
     );
   }

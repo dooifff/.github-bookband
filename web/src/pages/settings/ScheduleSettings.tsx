@@ -59,7 +59,7 @@ export default function ScheduleSettings() {
 
     try {
       // Save would go to a settings endpoint
-      await api.put('/admin/settings/schedule', settings)
+      await api.put('/admin/performance/email/schedule', settings)
       setSuccess('Settings saved successfully!')
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save settings')

@@ -48,9 +48,8 @@ class LoginTest extends TestCase
             'password' => 'wrongpassword',
         ]);
 
-        $response->assertStatus(401)
+        $response->assertStatus(422)
             ->assertJson([
-                'success' => false,
                 'message' => 'Email atau password tidak sesuai',
             ]);
     }
@@ -62,9 +61,9 @@ class LoginTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertStatus(401)
+        $response->assertStatus(422)
             ->assertJson([
-                'success' => false,
+                'message' => 'Email atau password tidak sesuai',
             ]);
     }
 

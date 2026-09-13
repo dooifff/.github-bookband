@@ -254,7 +254,7 @@ class _PricingPreviewScreenState extends State<PricingPreviewScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.surfaceLighter,,
+                          color: AppTheme.surfaceLighter,
                         ),
                       ),
                       if (isToday) ...[

@@ -57,9 +57,11 @@ class EmailReportController extends Controller
     /**
      * Send weekly report to all admins
      */
-    public function sendWeeklyReport()
+    public function sendWeeklyReport(Request $request)
     {
-        $results = $this->emailService->sendWeeklyReport();
+        $results = $this->emailService->sendWeeklyReport(
+            $request->filled('recipient') ? $request->input('recipient') : null
+        );
 
         return response()->json([
             'success' => $results['failed'] === 0,
@@ -161,6 +163,37 @@ class EmailReportController extends Controller
 
         return response()->json([
             'success' => true,
+            'data' => $settings,
+        ]);
+    }
+
+    /**
+     * Update email schedule settings
+     */
+    public function updateScheduleSettings(Request $request)
+    {
+        $request->validate([
+            'daily' => 'array',
+            'daily.enabled' => 'boolean',
+            'daily.time' => 'date_format:H:i',
+            'daily.recipients' => 'array',
+            'weekly' => 'array',
+            'weekly.enabled' => 'boolean',
+            'weekly.day' => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'weekly.time' => 'date_format:H:i',
+            'weekly.recipients' => 'array',
+            'monthly' => 'array',
+            'monthly.enabled' => 'boolean',
+            'monthly.day' => 'integer|between:1,28',
+            'monthly.time' => 'date_format:H:i',
+            'monthly.recipients' => 'array',
+        ]);
+
+        $settings = $this->emailService->updateScheduleSettings($request->all());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengaturan jadwal email berhasil disimpan',
             'data' => $settings,
         ]);
     }

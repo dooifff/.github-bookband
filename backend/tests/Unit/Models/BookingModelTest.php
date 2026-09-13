@@ -64,7 +64,7 @@ class BookingModelTest extends TestCase
 
     public function test_booking_can_be_cancelled()
     {
-        $booking = Booking::factory()->create(['status' => 'confirmed']);
+        $booking = Booking::factory()->create(['status' => 'paid']);
 
         $this->assertTrue($booking->canBeCancelled());
     }

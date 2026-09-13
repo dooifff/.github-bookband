@@ -18,7 +18,7 @@ class FavoriteController extends Controller
             ->with(['studio' => function ($q) {
                 $q->select('id', 'name', 'slug', 'address', 'city', 'average_rating', 'total_reviews');
             }, 'studio.images' => function ($q) {
-                $q->select('id', 'studio_id', 'url')->where('is_primary', true)->limit(1);
+                $q->select('id', 'studio_id', 'url')->limit(1);
             }])
             ->orderBy('created_at', 'desc')
             ->paginate(15);

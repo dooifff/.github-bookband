@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../home/home_screen.dart';
-import 'register_screen.dart';
+import '../../services/api_service.dart';
+import '../../widgets/google_sign_in_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -34,9 +36,167 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _passwordController.text,
     );
 
-    if (success && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+    if (!mounted) return;
+
+    if (success) {
+      // Use go_router to navigate based on role
+      final user = authProvider.user;
+      switch (user?.role) {
+        case 'owner':
+          context.go('/owner');
+          break;
+        case 'admin':
+        case 'super_admin':
+          context.go('/admin');
+          break;
+        default:
+          context.go('/');
+          break;
+      }
+      return;
+    }
+
+    // Pesan error juga ditampilkan di dalam form, tapi SnackBar memastikan
+    // pengguna melihatnya walau sedang scroll di layar kecil.
+    final error = authProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: AppTheme.danger,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  /// Dialog untuk mengganti alamat backend tanpa build ulang.
+  Future<void> _handleServerSettings() async {
+    final api = ApiService();
+    final controller = TextEditingController(text: api.baseUrl);
+
+    final action = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.surfaceLight,
+        title: const Text(
+          'Server API',
+          style: TextStyle(color: AppTheme.textPrimary, fontSize: 17),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Alamat backend yang dipakai aplikasi. Cukup tulis domainnya, '
+              'aplikasi akan menambahkan /api/v1 otomatis.',
+              style: TextStyle(color: AppTheme.textMuted, fontSize: 12.5, height: 1.4),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.url,
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'http://192.168.1.10:8000',
+                hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                filled: true,
+                fillColor: AppTheme.primary.withOpacity(0.5),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.accent, width: 1.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Default: ${AppConstants.defaultApiBaseUrl}',
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('reset'),
+            child: const Text('Reset', style: TextStyle(color: AppTheme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('save'),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) {
+      controller.dispose();
+      return;
+    }
+
+    if (action == 'reset') {
+      await api.resetBaseUrl();
+      if (mounted) setState(() {});
+      _showSnackBar('Server API dikembalikan ke default.', AppTheme.info);
+    } else if (action == 'save') {
+      final saved = await api.setBaseUrl(controller.text);
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      if (saved) {
+        setState(() {});
+        _showSnackBar('Server API disimpan: ${api.baseUrl}', AppTheme.success);
+      } else {
+        _showSnackBar('Alamat server tidak valid.', AppTheme.danger);
+      }
+    }
+
+    controller.dispose();
+  }
+
+  void _showSnackBar(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.loginWithGoogle();
+
+    if (!mounted) return;
+
+    if (success) {
+      final user = authProvider.user;
+      switch (user?.role) {
+        case 'owner':
+          context.go('/owner');
+          break;
+        default:
+          context.go('/');
+          break;
+      }
+      return;
+    }
+
+    final error = authProvider.error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error),
+          backgroundColor: AppTheme.danger,
+        ),
       );
     }
   }
@@ -176,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         decoration: InputDecoration(
                           labelText: 'EMAIL ADDRESS',
-                          labelStyle: TextStyle(
+                          labelStyle: const TextStyle(
                             color: AppTheme.textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -223,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         decoration: InputDecoration(
                           labelText: 'PASSWORD',
-                          labelStyle: TextStyle(
+                          labelStyle: const TextStyle(
                             color: AppTheme.textMuted,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -273,7 +433,44 @@ class _LoginScreenState extends State<LoginScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 12),
+
+                      // Server API yang sedang dipakai
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _handleServerSettings,
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          icon: const Icon(Icons.dns_outlined, size: 15, color: AppTheme.textMuted),
+                          label: Text(
+                            'Server: ${Uri.tryParse(AppConstants.baseUrl)?.host ?? AppConstants.baseUrl}',
+                            style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Lupa password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.push('/forgot-password'),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Lupa password?',
+                            style: TextStyle(fontSize: 13, color: AppTheme.accent),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
 
                       // Login button
                       Consumer<AuthProvider>(
@@ -344,6 +541,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           return const SizedBox.shrink();
                         },
                       ),
+                      const SizedBox(height: 20),
+
+                      // Google Sign-In - akun baru otomatis dibuat backend
+                      Consumer<AuthProvider>(
+                        builder: (context, auth, _) => GoogleSignInButton(
+                          isLoading: auth.isLoading,
+                          onPressed: _handleGoogleLogin,
+                        ),
+                      ),
                       const SizedBox(height: 28),
 
                       // Register link
@@ -355,11 +561,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: TextStyle(color: AppTheme.textMuted, fontSize: 14),
                           ),
                           GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                              );
-                            },
+                            onTap: () => context.push('/register'),
                             child: const Text(
                               'Sign Up',
                               style: TextStyle(

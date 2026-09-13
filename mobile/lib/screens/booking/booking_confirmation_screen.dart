@@ -6,6 +6,7 @@ import '../../providers/booking_provider.dart';
 import '../../utils/formatters.dart';
 import '../home/home_screen.dart';
 import 'payment_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final Studio studio;
@@ -49,7 +50,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
             _buildInfoCard(
               'Studio',
               widget.studio.name,
-              Icons.studio,
+              Icons.music_note,
             ),
             const SizedBox(height: 12),
 

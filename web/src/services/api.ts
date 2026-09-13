@@ -23,9 +23,15 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
+    // Jika kirim FormData (upload file), hapus Content-Type default
+    // agar axios bisa set multipart/form-data + boundary otomatis
+    if (config.data instanceof FormData) {
+      delete (config.headers as any)['Content-Type']
+    }
+
     // Log requests in development
     if (import.meta.env.DEV) {
-      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`, config.data || '')
+      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`, config.data instanceof FormData ? '[FormData]' : config.data || '')
     }
 
     return config
@@ -83,35 +89,31 @@ api.interceptors.response.use(
     switch (status) {
       case 401:
         // Unauthorized - clear token and redirect to login
+        // But NOT if we're already on the login page (that would cause a redirect loop)
         localStorage.removeItem('token')
         localStorage.removeItem('user')
-        if (window.location.pathname !== '/login') {
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
           window.location.href = '/login'
         }
         break
 
       case 403:
-        // Forbidden
         console.error('[API] Forbidden:', message)
         break
 
       case 404:
-        // Not found
         console.error('[API] Not Found:', error.config?.url)
         break
 
       case 422:
-        // Validation errors
         console.error('[API] Validation Error:', error.response?.data?.errors)
         break
 
       case 429:
-        // Rate limited
         console.error('[API] Rate Limited. Please slow down.')
         break
 
       case 500:
-        // Server error
         console.error('[API] Server Error:', message)
         break
 

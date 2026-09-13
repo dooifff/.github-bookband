@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
-import '../auth/login_screen.dart';
-import '../home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -60,7 +59,9 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-    _initializeApp();
+    // Deferred: AuthProvider.initialize() notifies its listeners synchronously,
+    // which is not allowed while the first build is still running.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initializeApp());
   }
 
   @override
@@ -74,23 +75,26 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
 
     if (mounted) {
-      final isAuthenticated = context.read<AuthProvider>().isAuthenticated;
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              isAuthenticated ? const HomeScreen() : const LoginScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              ),
-              child: child,
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
-      );
+      final authProvider = context.read<AuthProvider>();
+      final isAuthenticated = authProvider.isAuthenticated;
+      // Route by role: owner to the owner dashboard, admin to the admin panel,
+      // everyone else to the customer app.
+      if (!isAuthenticated) {
+        context.go('/login');
+      } else {
+        switch (authProvider.user?.role) {
+          case 'owner':
+            context.go('/owner');
+            break;
+          case 'admin':
+          case 'super_admin':
+            context.go('/admin');
+            break;
+          default:
+            context.go('/');
+            break;
+        }
+      }
     }
   }
 

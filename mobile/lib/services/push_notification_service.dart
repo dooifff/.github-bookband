@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
@@ -9,7 +9,10 @@ import '../core/constants/api_constants.dart';
 import '../providers/auth_provider.dart';
 
 class PushNotificationService {
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  /// Resolved lazily: reading [FirebaseMessaging.instance] before
+  /// `Firebase.initializeApp()` has succeeded throws.
+  FirebaseMessaging get _firebaseMessaging => FirebaseMessaging.instance;
+
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   String? _fcmToken;
   bool _isInitialized = false;
@@ -17,11 +20,11 @@ class PushNotificationService {
   // Initialize push notifications
   Future<void> initialize(BuildContext context) async {
     if (_isInitialized) return;
-    
+
     try {
       // Initialize local notifications
       await _initializeLocalNotifications();
-      
+
       // Request permission
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
         alert: true,
@@ -34,11 +37,11 @@ class PushNotificationService {
       );
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('User granted permission');
+        debugPrint('User granted notification permission');
 
         // Get FCM token
         _fcmToken = await _firebaseMessaging.getToken();
-        print('FCM Token: $_fcmToken');
+        debugPrint('FCM Token: $_fcmToken');
 
         // Store token on server
         if (_fcmToken != null) {
@@ -56,7 +59,7 @@ class PushNotificationService {
           _handleForegroundMessage(message);
         });
 
-        // Handle background messages
+        // Handle background messages (app opened from notification)
         FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
           _handleBackgroundMessage(message);
         });
@@ -66,15 +69,13 @@ class PushNotificationService {
         if (initialMessage != null) {
           _handleBackgroundMessage(initialMessage);
         }
-        
+
         _isInitialized = true;
-      } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-        print('User granted provisional permission');
       } else {
-        print('User declined or has not accepted permission');
+        debugPrint('User declined notification permission');
       }
     } catch (e) {
-      print('Error initializing push notifications: $e');
+      debugPrint('Error initializing push notifications: $e');
     }
   }
 
@@ -84,43 +85,33 @@ class PushNotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS initialization
-    final IOSInitializationSettings initializationSettingsIOS =
-        IOSInitializationSettings(
+    // iOS/macOS initialization (Darwin = unified iOS/macOS)
+    final DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
       onDidReceiveLocalNotification: (int id, String? title, String? body, String? payload) async {
-        // Handle iOS notification tap
+        // Handle iOS notification tap while app is in foreground
         _onNotificationTapped(payload);
       },
     );
 
-    // macOS initialization
-    final MacOSInitializationSettings initializationSettingsMacOS =
-        MacOSInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
-
     // Linux initialization
-    final LinuxInitializationSettings initializationSettingsLinux =
-        const LinuxInitializationSettings(
-      defaultActionName: 'Open notification',
-    );
+    const LinuxInitializationSettings initializationSettingsLinux =
+        LinuxInitializationSettings(defaultActionName: 'Open notification');
 
     final InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-      macOS: initializationSettingsMacOS,
+      iOS: initializationSettingsDarwin,
+      macOS: initializationSettingsDarwin,
       linux: initializationSettingsLinux,
     );
 
     await _localNotifications.initialize(
       initializationSettings,
-      onSelectNotification: (String? payload) {
-        _onNotificationTapped(payload);
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
+        _onNotificationTapped(response.payload);
       },
     );
 
@@ -130,7 +121,7 @@ class PushNotificationService {
 
   // Create Android notification channels
   Future<void> _createNotificationChannels() async {
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       const AndroidNotificationChannel bookingChannel = AndroidNotificationChannel(
         'booking_channel',
         'Booking Notifications',
@@ -169,37 +160,32 @@ class PushNotificationService {
   // Handle notification tap
   void _onNotificationTapped(String? payload) {
     if (payload == null) return;
-    
+
     try {
       final data = jsonDecode(payload);
       final type = data['type'];
-      
-      // Navigate based on notification type
+
       switch (type) {
         case 'booking_confirmed':
         case 'booking_reminder':
         case 'booking_cancelled':
-          // Navigate to booking detail or list
-          print('Navigate to booking: ${data['booking_id']}');
+          debugPrint('Navigate to booking: ${data['booking_id']}');
           break;
         case 'payment_reminder':
         case 'payment_success':
-          // Navigate to payment page
-          print('Navigate to payment: ${data['payment_code']}');
+          debugPrint('Navigate to payment: ${data['payment_code']}');
           break;
         case 'new_booking':
-          // Navigate to owner bookings
-          print('Navigate to owner bookings');
+          debugPrint('Navigate to owner bookings');
           break;
         case 'band_invitation':
-          // Navigate to band detail
-          print('Navigate to band: ${data['band_id']}');
+          debugPrint('Navigate to band: ${data['band_id']}');
           break;
         default:
-          print('Unknown notification type: $type');
+          debugPrint('Unknown notification type: $type');
       }
     } catch (e) {
-      print('Error parsing notification payload: $e');
+      debugPrint('Error parsing notification payload: $e');
     }
   }
 
@@ -210,7 +196,7 @@ class PushNotificationService {
       final userToken = authProvider.token;
 
       if (userToken == null) {
-        print('No auth token available');
+        debugPrint('No auth token available');
         return;
       }
 
@@ -225,24 +211,23 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
-        print('FCM token stored successfully');
+        debugPrint('FCM token stored successfully');
       } else {
-        print('Failed to store FCM token: ${response.body}');
+        debugPrint('Failed to store FCM token: ${response.body}');
       }
     } catch (e) {
-      print('Error storing FCM token: $e');
+      debugPrint('Error storing FCM token: $e');
     }
   }
 
   // Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    print('Received foreground message: ${message.messageId}');
-    
+    debugPrint('Received foreground message: ${message.messageId}');
+
     final notification = message.notification;
     final data = message.data;
 
     if (notification != null) {
-      // Show local notification
       _showLocalNotification(
         title: notification.title ?? 'StudioBook',
         body: notification.body ?? '',
@@ -250,14 +235,13 @@ class PushNotificationService {
       );
     }
 
-    // Handle data message
     _handleNotificationData(data);
   }
 
   // Handle background messages
   void _handleBackgroundMessage(RemoteMessage message) {
-    print('Handling background message: ${message.messageId}');
-    
+    debugPrint('Handling background message: ${message.messageId}');
+
     final data = message.data;
     _handleNotificationData(data);
   }
@@ -265,28 +249,25 @@ class PushNotificationService {
   // Handle notification data
   void _handleNotificationData(Map<String, dynamic> data) {
     final type = data['type'];
-    
+
     switch (type) {
       case 'booking_confirmed':
-        print('Navigate to booking detail');
-        break;
       case 'booking_reminder':
-        print('Navigate to booking detail');
+      case 'booking_cancelled':
+        debugPrint('Navigate to booking detail');
         break;
       case 'payment_reminder':
-        print('Navigate to payment page');
-        break;
-      case 'booking_cancelled':
-        print('Navigate to bookings list');
+      case 'payment_success':
+        debugPrint('Navigate to payment page');
         break;
       case 'new_booking':
-        print('Navigate to owner bookings');
+        debugPrint('Navigate to owner bookings');
         break;
       case 'band_invitation':
-        print('Navigate to band detail');
+        debugPrint('Navigate to band detail');
         break;
       default:
-        print('Unknown notification type: $type');
+        debugPrint('Unknown notification type: $type');
     }
   }
 
@@ -296,10 +277,9 @@ class PushNotificationService {
     required String body,
     required Map<String, dynamic> data,
   }) async {
-    // Determine notification channel based on type
     String channelId = 'general_channel';
     String channelName = 'General Notifications';
-    
+
     final type = data['type'];
     if (type != null) {
       if (type.toString().contains('booking')) {
@@ -311,7 +291,6 @@ class PushNotificationService {
       }
     }
 
-    // Android notification details
     AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
       channelId,
@@ -323,17 +302,8 @@ class PushNotificationService {
       styleInformation: BigTextStyleInformation(body),
     );
 
-    // iOS notification details
-    IOSNotificationDetails iOSPlatformChannelSpecifics =
-        const IOSNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    // macOS notification details
-    MacOSNotificationDetails macOSPlatformChannelSpecifics =
-        const MacOSNotificationDetails(
+    const DarwinNotificationDetails darwinPlatformChannelSpecifics =
+        DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
@@ -341,11 +311,10 @@ class PushNotificationService {
 
     NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
-      iOS: iOSPlatformChannelSpecifics,
-      macOS: macOSPlatformChannelSpecifics,
+      iOS: darwinPlatformChannelSpecifics,
+      macOS: darwinPlatformChannelSpecifics,
     );
 
-    // Generate unique notification ID
     final int notificationId = DateTime.now().millisecondsSinceEpoch.remainder(100000);
 
     await _localNotifications.show(
@@ -367,9 +336,9 @@ class PushNotificationService {
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
-      print('Subscribed to topic: $topic');
+      debugPrint('Subscribed to topic: $topic');
     } catch (e) {
-      print('Error subscribing to topic: $e');
+      debugPrint('Error subscribing to topic: $e');
     }
   }
 
@@ -377,9 +346,9 @@ class PushNotificationService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
-      print('Unsubscribed from topic: $topic');
+      debugPrint('Unsubscribed from topic: $topic');
     } catch (e) {
-      print('Error unsubscribing from topic: $e');
+      debugPrint('Error unsubscribing from topic: $e');
     }
   }
 
@@ -388,9 +357,9 @@ class PushNotificationService {
     try {
       await _firebaseMessaging.deleteToken();
       _fcmToken = null;
-      print('FCM token deleted');
+      debugPrint('FCM token deleted');
     } catch (e) {
-      print('Error deleting FCM token: $e');
+      debugPrint('Error deleting FCM token: $e');
     }
   }
 
@@ -413,13 +382,12 @@ class PushNotificationService {
 // Top-level function for background message handling
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Background message received: ${message.messageId}');
-  
-  // Handle background message
+  debugPrint('Background message received: ${message.messageId}');
+
   final data = message.data;
   final type = data['type'];
-  
-  print('Background notification type: $type');
+
+  debugPrint('Background notification type: $type');
 }
 
 // Register background handler

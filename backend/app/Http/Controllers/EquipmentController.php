@@ -14,9 +14,9 @@ class EquipmentController extends Controller
     /**
      * List equipment for a studio
      */
-    public function index(Request $request, int $studioId)
+    public function index(Request $request, string $slug)
     {
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
 
         $equipment = $studio->equipment()
             ->when(!$request->user() || $request->user()->id !== $studio->owner_id, function ($q) {

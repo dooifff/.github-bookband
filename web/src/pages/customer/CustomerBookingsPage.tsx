@@ -5,7 +5,7 @@ import api from '../../services/api'
 interface Booking {
   id: number
   booking_code: string
-  studio: { name: string; city: string }
+  studio: { name: string; city: string; slug?: string }
   room: { name: string }
   date: string
   start_time: string
@@ -154,6 +154,14 @@ export default function CustomerBookingsPage() {
                       >
                         Batalkan
                       </button>
+                    )}
+                    {booking.status === 'completed' && (
+                      <a
+                        href={`/customer/studios/${booking.studio?.slug}`}
+                        className="mt-3 inline-block px-3 py-1.5 text-xs font-medium bg-warning/10 text-warning border border-warning/20 rounded-lg hover:bg-warning/15 transition-colors"
+                      >
+                        ⭐ Beri Rating
+                      </a>
                     )}
                   </div>
                 </div>

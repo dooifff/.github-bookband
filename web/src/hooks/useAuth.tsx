@@ -16,6 +16,11 @@ interface AuthContextType {
   token: string | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
+  /** Registrasi akun customer (backend selalu membuat role customer). */
+  register: (name: string, email: string, password: string, phone?: string) => Promise<User>
+  loginWithGoogle: (idToken: string, role?: 'customer' | 'owner') => Promise<User>
+  requestPasswordReset: (email: string) => Promise<void>
+  resetPassword: (token: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   updateUser: (data: Partial<User>) => void
   isAdmin: boolean
@@ -71,6 +76,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
   }
 
+  const register = useCallback(
+    async (name: string, email: string, password: string, phone?: string) => {
+      const response = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        ...(phone ? { phone } : {}),
+      })
+      const { user: userData, token: authToken } = response.data.data
+
+      localStorage.setItem('token', authToken)
+      localStorage.setItem('user', JSON.stringify(userData))
+      setToken(authToken)
+      setUser(userData)
+      api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
+
+      return userData as User
+    },
+    []
+  )
+
+  /** Minta tautan reset password; backend membalas sukses walau email belum terdaftar. */
+  const requestPasswordReset = useCallback(async (email: string) => {
+    await api.post('/auth/forgot-password', { email })
+  }, [])
+
+  /** Selesaikan reset password dengan token dari email. */
+  const resetPassword = useCallback(
+    async (token: string, email: string, password: string) => {
+      await api.post('/auth/reset-password', {
+        token,
+        email,
+        password,
+        password_confirmation: password,
+      })
+    },
+    []
+  )
+
+  /**
+   * Login/register lewat Google. ID token diverifikasi backend, yang akan
+   * membuat akun otomatis bila email belum terdaftar.
+   */
+  const loginWithGoogle = useCallback(async (idToken: string, role?: 'customer' | 'owner') => {
+    const response = await api.post('/auth/google', {
+      id_token: idToken,
+      ...(role ? { role } : {}),
+    })
+    const { user: userData, token: authToken } = response.data.data
+
+    localStorage.setItem('token', authToken)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setToken(authToken)
+    setUser(userData)
+    api.defaults.headers.common['Authorization'] = `Bearer ${authToken}`
+
+    return userData as User
+  }, [])
+
   const logout = useCallback(async () => {
     try {
       if (token) {
@@ -108,6 +172,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         loading,
         login,
+        register,
+        loginWithGoogle,
+        requestPasswordReset,
+        resetPassword,
         logout,
         updateUser,
         isAdmin,

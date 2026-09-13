@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/studio_model.dart';
 import '../../repositories/studio_repository.dart';
 import '../../widgets/studio_card.dart';
 import '../studio/studio_detail_screen.dart';
@@ -30,7 +31,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
       final studioRepository = context.read<StudioRepository>();
       final favorites = await studioRepository.getFavorites();
       setState(() {
-        _favorites = List<Map<String, dynamic>>.from(favorites['data'] ?? []);
+        _favorites = List<Map<String, dynamic>>.from(favorites['favorites'] ?? []);
         _isLoading = false;
       });
     } catch (e) {
@@ -42,7 +43,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     try {
       final studioRepository = context.read<StudioRepository>();
       await studioRepository.toggleFavorite(studioId);
-      setState(() { _favorites.removeWhere((f) => f['id'] == studioId); });
+      setState(() {
+        _favorites.removeWhere((f) => (f['studio']?['id'] ?? f['id']) == studioId);
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Dihapus dari favorit')));
       }
@@ -79,24 +82,22 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         padding: const EdgeInsets.all(16),
                         itemCount: _favorites.length,
                         itemBuilder: (context, index) {
-                          final studio = _favorites[index];
+                          // The API returns favorites as {id, studio: {...}}.
+                          final favorite = _favorites[index];
+                          final studio = Studio.fromJson(
+                            Map<String, dynamic>.from(favorite['studio'] ?? {}),
+                          )..isFavorited = true;
+
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: StudioCard(
-                              name: studio['name'] ?? '',
-                              slug: studio['slug'] ?? '',
-                              city: studio['city'] ?? '',
-                              address: studio['address'] ?? '',
-                              rating: (studio['rating'] ?? 0).toDouble(),
-                              totalReviews: studio['total_reviews'] ?? 0,
-                              priceFrom: studio['min_price'] ?? 0,
+                              studio: studio,
                               onTap: () {
-                                final slug = studio['slug'];
-                                if (slug != null) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => StudioDetailScreen(studioSlug: slug)),
-                                  );
-                                }
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => StudioDetailScreen(studioSlug: studio.slug),
+                                  ),
+                                );
                               },
                             ),
                           );

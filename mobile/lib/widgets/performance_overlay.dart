@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/performance_service.dart';
 
@@ -216,8 +217,8 @@ class _PerformanceOverlayState extends State<PerformanceOverlay>
           // Frame Time
           _buildMetricRow(
             'Frame',
-            '${metrics.平均FrameTime.inMilliseconds}ms',
-            metrics.平均FrameTime.inMilliseconds > 16 ? Colors.orange : Colors.green,
+            '${metrics.averageFrameTime.inMilliseconds}ms',
+            metrics.averageFrameTime.inMilliseconds > 16 ? Colors.orange : Colors.green,
           ),
           
           // Missed Frames

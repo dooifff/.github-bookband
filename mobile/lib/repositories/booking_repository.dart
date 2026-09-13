@@ -7,7 +7,7 @@ class BookingRepository {
   BookingRepository(this._api);
 
   /// Create a new booking
-  Future<BookingModel> createBooking({
+  Future<Booking> createBooking({
     required int studioId,
     required int roomId,
     required String date,
@@ -28,7 +28,7 @@ class BookingRepository {
       if (notes != null) 'notes': notes,
     });
 
-    return BookingModel.fromJson(response['data']);
+    return Booking.fromJson(response['data']);
   }
 
   /// Get user's bookings
@@ -46,31 +46,31 @@ class BookingRepository {
 
     return {
       'bookings': (response['data'] as List)
-          .map((json) => BookingModel.fromJson(json))
+          .map((json) => Booking.fromJson(json))
           .toList(),
       'meta': response['meta'],
     };
   }
 
   /// Get booking detail
-  Future<BookingModel> getBooking(int bookingId) async {
+  Future<Booking> getBooking(int bookingId) async {
     final response = await _api.get('/bookings/$bookingId');
-    return BookingModel.fromJson(response['data']);
+    return Booking.fromJson(response['data']);
   }
 
   /// Get booking by code
-  Future<BookingModel> getBookingByCode(String code) async {
+  Future<Booking> getBookingByCode(String code) async {
     final response = await _api.get('/bookings/code/$code');
-    return BookingModel.fromJson(response['data']);
+    return Booking.fromJson(response['data']);
   }
 
   /// Cancel booking
-  Future<BookingModel> cancelBooking(int bookingId, {String? reason}) async {
+  Future<Booking> cancelBooking(int bookingId, {String? reason}) async {
     final response = await _api.post('/bookings/$bookingId/cancel', data: {
       if (reason != null) 'reason': reason,
     });
 
-    return BookingModel.fromJson(response['data']);
+    return Booking.fromJson(response['data']);
   }
 
   /// Create payment for booking

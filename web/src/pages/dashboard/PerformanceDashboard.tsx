@@ -46,9 +46,9 @@ interface PerformanceData {
 }
 
 function getBarColor(value: number, thresholds: { warning: number; critical: number }) {
-  if (value >= thresholds.critical) return 'bg-red-500'
-  if (value >= thresholds.warning) return 'bg-yellow-500'
-  return 'bg-success'
+  if (value >= thresholds.critical) return 'stroke-red-500'
+  if (value >= thresholds.warning) return 'stroke-yellow-500'
+  return 'stroke-success'
 }
 
 function CircularProgress({ value, label, color }: { value: number; label: string; color: string }) {
@@ -58,7 +58,7 @@ function CircularProgress({ value, label, color }: { value: number; label: strin
     <div className="flex flex-col items-center">
       <div className="relative w-28 h-28">
         <svg className="w-28 h-28 transform -rotate-90">
-          <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" className="stroke-surface-lighter" />
+          <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" className="stroke-surface-elevated" />
           <circle cx="56" cy="56" r="45" strokeWidth="6" fill="none" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className={`${color} transition-all duration-700`} strokeLinecap="round" />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -133,14 +133,14 @@ export default function PerformanceDashboard() {
 
   return (
     <AdminLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between animate-fade-in-up">
           <div>
-            <h1 className="text-3xl font-bold text-text-primary tracking-tight">Dasbor Performa</h1>
+            <h1 className="text-2xl font-bold text-text-primary tracking-tight">Dasbor Performa</h1>
             <p className="text-text-secondary mt-1 text-sm">Metrik dan pemantauan sistem secara real-time</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <label className="text-text-muted text-xs">Perbarui otomatis</label>
               <button onClick={() => setAutoRefresh(!autoRefresh)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${autoRefresh ? 'bg-success/15 text-success border border-success/20' : 'bg-surface-lighter text-text-muted border border-border'}`}>
@@ -174,30 +174,29 @@ export default function PerformanceDashboard() {
         )}
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { title: 'Penggunaan CPU', value: `${metrics?.server.cpu_usage || 0}%`, icon: '🖥️', subtitle: metrics?.server.uptime },
-            { title: 'Memori', value: `${metrics?.server.memory.percentage || 0}%`, icon: '💾', subtitle: `${metrics?.server.memory.used} / ${metrics?.server.memory.total}` },
-            { title: 'Disk', value: `${metrics?.server.disk.percentage || 0}%`, icon: '💿', subtitle: `${metrics?.server.disk.used} / ${metrics?.server.disk.total}` },
-            { title: 'Waktu Respons', value: `${metrics?.response_time_ms || 0}ms`, icon: '⚡', subtitle: 'Respon API' },
+            { title: 'Penggunaan CPU', value: `${metrics?.server.cpu_usage || 0}%`, icon: '🖥️', subtitle: metrics?.server.uptime, accent: (metrics?.server.cpu_usage ?? 0) >= 90 ? 'text-danger' : (metrics?.server.cpu_usage ?? 0) >= 70 ? 'text-warning' : 'text-accent' },
+            { title: 'Memori', value: `${metrics?.server.memory.percentage || 0}%`, icon: '💾', subtitle: `${metrics?.server.memory.used} / ${metrics?.server.memory.total}`, accent: (metrics?.server.memory.percentage ?? 0) >= 85 ? 'text-danger' : (metrics?.server.memory.percentage ?? 0) >= 70 ? 'text-warning' : 'text-accent' },
+            { title: 'Disk', value: `${metrics?.server.disk.percentage || 0}%`, icon: '💿', subtitle: `${metrics?.server.disk.used} / ${metrics?.server.disk.total}`, accent: (metrics?.server.disk.percentage ?? 0) >= 90 ? 'text-danger' : (metrics?.server.disk.percentage ?? 0) >= 80 ? 'text-warning' : 'text-accent' },
+            { title: 'Waktu Respons', value: `${metrics?.response_time_ms || 0}ms`, icon: '⚡', subtitle: 'Respon API', accent: 'text-accent' },
           ].map((card, i) => (
-            <div key={card.title} className={`card-luxury p-5 animate-fade-in-up stagger-${i + 1}`}>
+            <div key={card.title} className={`card-luxury p-3 border-l-2 border-l-accent/40 animate-fade-in-up stagger-${i + 1}`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-text-muted text-xs font-medium tracking-wide uppercase">{card.title}</p>
-                  <p className="text-2xl font-bold text-text-primary mt-2 tracking-tight">{card.value}</p>
-                  {card.subtitle && <p className="text-text-muted text-xs mt-1">{card.subtitle}</p>}
+                  <p className="text-text-secondary text-xs font-medium tracking-wide uppercase">{card.title}</p>
+                  <p className={`text-2xl font-bold mt-2 tracking-tight ${card.accent}`}>{card.value}</p>
+                  {card.subtitle && <p className="text-text-secondary text-xs mt-1.5">{card.subtitle}</p>}
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-surface-lighter flex items-center justify-center text-lg">{card.icon}</div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-lg">{card.icon}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Circular Gauges */}
-        <div className="card-luxury p-6 animate-fade-in-up stagger-5">
-          <h2 className="text-base font-semibold text-text-primary mb-6">Sumber Daya Sistem</h2>
-          <div className="flex justify-around flex-wrap gap-8">
+        <div className="card-luxury p-4 animate-fade-in-up stagger-5">            <h2 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2"><span className="text-accent">⚙</span> Sumber Daya Sistem</h2>
+          <div className="flex justify-around flex-wrap gap-6">
             <CircularProgress value={metrics?.server.cpu_usage || 0} label="CPU" color={getBarColor(metrics?.server.cpu_usage || 0, { warning: 70, critical: 90 })} />
             <CircularProgress value={metrics?.server.memory.percentage || 0} label="Memory" color={getBarColor(metrics?.server.memory.percentage || 0, { warning: 70, critical: 85 })} />
             <CircularProgress value={metrics?.server.disk.percentage || 0} label="Disk" color={getBarColor(metrics?.server.disk.percentage || 0, { warning: 80, critical: 90 })} />
@@ -205,10 +204,10 @@ export default function PerformanceDashboard() {
         </div>
 
         {/* Details Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Server */}
-          <div className="card-luxury p-6 animate-fade-in-up stagger-6">
-            <h2 className="text-base font-semibold text-text-primary mb-4">🖥️ Server</h2>
+          <div className="card-luxury p-4 animate-fade-in-up stagger-6">
+            <h2 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">🖥️ Server</h2>
             <div className="space-y-0">
               {[
                 { label: 'Versi PHP', value: metrics?.server.php_version },
@@ -217,7 +216,7 @@ export default function PerformanceDashboard() {
                 { label: 'Batas PHP', value: metrics?.server.memory.php_limit },
                 { label: 'Ruang Disk', value: metrics?.server.disk.free },
               ].map((item, i) => (
-                <div key={item.label} className={`flex justify-between py-3 ${i < 4 ? 'border-b border-border/30' : ''}`}>
+                <div key={item.label} className={`flex justify-between py-2 ${i < 4 ? 'border-b border-border-light/40' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
                   <span className="text-text-primary text-sm font-medium">{item.value}</span>
                 </div>
@@ -226,8 +225,8 @@ export default function PerformanceDashboard() {
           </div>
 
           {/* Database */}
-          <div className="card-luxury p-6 animate-fade-in-up stagger-7">
-            <h2 className="text-base font-semibold text-text-primary mb-4">🗄️ Database</h2>
+          <div className="card-luxury p-4 animate-fade-in-up stagger-7">
+            <h2 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">🗄️ Database</h2>
             <div className="space-y-0">
               {[
                 { label: 'Driver', value: metrics?.database.driver?.toUpperCase() },
@@ -236,7 +235,7 @@ export default function PerformanceDashboard() {
                 { label: 'Tabel', value: metrics?.database.table_count },
                 { label: 'Ukuran', value: metrics?.database.size },
               ].map((item, i) => (
-                <div key={item.label} className={`flex justify-between py-3 ${i < 4 ? 'border-b border-border/30' : ''}`}>
+                <div key={item.label} className={`flex justify-between py-2 ${i < 4 ? 'border-b border-border-light/40' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
                   <span className="text-text-primary text-sm font-medium">{item.value}</span>
                 </div>
@@ -245,8 +244,8 @@ export default function PerformanceDashboard() {
           </div>
 
           {/* Application */}
-          <div className="card-luxury p-6 animate-fade-in-up stagger-6">
-            <h2 className="text-base font-semibold text-text-primary mb-4">📊 Aplikasi</h2>
+          <div className="card-luxury p-4 animate-fade-in-up stagger-6">
+            <h2 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">📊 Aplikasi</h2>
             <div className="space-y-0">
               {[
                 { label: 'Total Permintaan', value: metrics?.application.requests.total.toLocaleString() },
@@ -254,7 +253,7 @@ export default function PerformanceDashboard() {
                 { label: 'Rata-rata Respons', value: `${metrics?.application.response_time.average_ms}ms` },
                 { label: 'Pengguna Aktif', value: metrics?.application.active_users },
               ].map((item, i) => (
-                <div key={item.label} className={`flex justify-between py-3 ${i < 3 ? 'border-b border-border/30' : ''}`}>
+                <div key={item.label} className={`flex justify-between py-2 ${i < 3 ? 'border-b border-border-light/40' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
                   <span className="text-text-primary text-sm font-medium">{item.value}</span>
                 </div>
@@ -263,15 +262,15 @@ export default function PerformanceDashboard() {
           </div>
 
           {/* Process */}
-          <div className="card-luxury p-6 animate-fade-in-up stagger-7">
-            <h2 className="text-base font-semibold text-text-primary mb-4">⚙️ Proses</h2>
+          <div className="card-luxury p-4 animate-fade-in-up stagger-7">
+            <h2 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-2">⚙️ Proses</h2>
             <div className="space-y-0">
               {[
                 { label: 'PID', value: metrics?.application.process.pid },
                 { label: 'Memory Peak', value: metrics?.application.process.memory_peak },
                 { label: 'Database', value: metrics?.database.status },
               ].map((item, i) => (
-                <div key={item.label} className={`flex justify-between py-3 ${i < 2 ? 'border-b border-border/30' : ''}`}>
+                <div key={item.label} className={`flex justify-between py-2 ${i < 2 ? 'border-b border-border-light/40' : ''}`}>
                   <span className="text-text-secondary text-sm">{item.label}</span>
                   <span className="text-text-primary text-sm font-medium">{item.value}</span>
                 </div>

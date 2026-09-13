@@ -20,16 +20,18 @@ class ScheduleController extends Controller
     /**
      * Check room availability
      */
-    public function checkAvailability(Request $request, int $studioId): JsonResponse
+    public function checkAvailability(Request $request, string $slug): JsonResponse
     {
         $request->validate([
             'room_id' => 'required|exists:studio_rooms,id',
-            'date' => 'required|date|after_or_equal:today',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'date' => 'required|date',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
         ]);
 
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
+        $startTime = $request->input('start_time', '00:00');
+        $endTime = $request->input('end_time', '23:59');
 
         // Verify room belongs to studio
         $room = $studio->rooms()->find($request->room_id);
@@ -40,16 +42,16 @@ class ScheduleController extends Controller
         $isAvailable = $this->scheduleService->isRoomAvailable(
             $request->room_id,
             $request->date,
-            $request->start_time,
-            $request->end_time
+            $startTime,
+            $endTime
         );
 
         return $this->successResponse([
             'is_available' => $isAvailable,
             'room_id' => $request->room_id,
             'date' => $request->date,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
             'message' => $isAvailable ? 'Ruangan tersedia' : 'Ruangan tidak tersedia',
         ]);
     }
@@ -57,15 +59,15 @@ class ScheduleController extends Controller
     /**
      * Get available time slots for a room
      */
-    public function getAvailableSlots(Request $request, int $studioId): JsonResponse
+    public function getAvailableSlots(Request $request, string $slug): JsonResponse
     {
         $request->validate([
             'room_id' => 'required|exists:studio_rooms,id',
-            'date' => 'required|date|after_or_equal:today',
+            'date' => 'required|date',
             'duration_hours' => 'nullable|integer|min:1|max:12',
         ]);
 
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
 
         // Verify room belongs to studio
         $room = $studio->rooms()->find($request->room_id);
@@ -92,15 +94,16 @@ class ScheduleController extends Controller
     /**
      * Get available rooms for a specific date and time
      */
-    public function getAvailableRooms(Request $request, int $studioId): JsonResponse
+    public function getAvailableRooms(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'date' => 'required|date|after_or_equal:today',
+            'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
+        $studioId = $studio->id;
 
         $rooms = $this->scheduleService->getAvailableRooms(
             $studioId,
@@ -128,7 +131,7 @@ class ScheduleController extends Controller
     /**
      * Get studio schedule summary for a month
      */
-    public function getMonthlySchedule(Request $request, int $studioId): JsonResponse
+    public function getMonthlySchedule(Request $request, string $slug): JsonResponse
     {
         $request->validate([
             'month' => 'required|integer|between:1,12',
@@ -136,7 +139,8 @@ class ScheduleController extends Controller
             'room_id' => 'nullable|exists:studio_rooms,id',
         ]);
 
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
+        $studioId = $studio->id;
 
         $startDate = sprintf('%04d-%02d-01', $request->year, $request->month);
         $endDate = Carbon::parse($startDate)->endOfMonth()->format('Y-m-d');

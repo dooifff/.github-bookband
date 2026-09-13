@@ -78,6 +78,9 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.border, width: 0.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -629,14 +632,14 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
     try {
       final studioRepository = context.read<StudioRepository>();
       
-      Map<String, dynamic> result;
+      Map<String, dynamic> result = const {};
 
       switch (_selectedMode) {
         case 'dates':
           result = await studioRepository.blockDates(
             widget.roomId,
             _selectedDates.map((d) => DateFormat('yyyy-MM-dd').format(d)).toList(),
-            _reason.isNotEmpty ? _reason : null,
+            reason: _reason.isNotEmpty ? _reason : null,
           );
           break;
 
@@ -645,13 +648,13 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
             widget.roomId,
             DateFormat('yyyy-MM-dd').format(_startDate!),
             DateFormat('yyyy-MM-dd').format(_endDate!),
-            _startTime != null
+            startTime: _startTime != null
                 ? '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
                 : null,
-            _endTime != null
+            endTime: _endTime != null
                 ? '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}'
                 : null,
-            _reason.isNotEmpty ? _reason : null,
+            reason: _reason.isNotEmpty ? _reason : null,
           );
           break;
 
@@ -661,13 +664,13 @@ class _BulkScheduleScreenState extends State<BulkScheduleScreen> {
             _selectedDaysOfWeek,
             DateFormat('yyyy-MM-dd').format(_startDate!),
             DateFormat('yyyy-MM-dd').format(_endDate!),
-            _startTime != null
+            startTime: _startTime != null
                 ? '${_startTime!.hour.toString().padLeft(2, '0')}:${_startTime!.minute.toString().padLeft(2, '0')}'
                 : null,
-            _endTime != null
+            endTime: _endTime != null
                 ? '${_endTime!.hour.toString().padLeft(2, '0')}:${_endTime!.minute.toString().padLeft(2, '0')}'
                 : null,
-            _reason.isNotEmpty ? _reason : null,
+            reason: _reason.isNotEmpty ? _reason : null,
           );
           break;
       }

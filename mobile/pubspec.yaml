@@ -36,8 +36,8 @@ dependencies:
   geocoding: ^3.0.0
   
   # Firebase
-  firebase_core: ^2.27.0
-  firebase_messaging: ^14.7.0
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
   flutter_local_notifications: ^17.0.0
   
   # Utils
@@ -52,7 +52,8 @@ dependencies:
   http: ^1.2.0
   
   # Performance Monitoring
-  system_info: ^2.1.0
+  system_info: ^1.0.1
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:

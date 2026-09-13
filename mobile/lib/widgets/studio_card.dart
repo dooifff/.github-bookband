@@ -3,7 +3,7 @@ import '../core/theme/app_theme.dart';
 import '../models/studio_model.dart';
 
 class StudioCard extends StatelessWidget {
-  final StudioModel studio;
+  final Studio studio;
   final VoidCallback? onTap;
   final VoidCallback? onFavoriteTap;
 
@@ -33,19 +33,19 @@ class StudioCard extends StatelessWidget {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: studio.images != null && studio.images!.isNotEmpty
+                  child: studio.images.isNotEmpty
                       ? Image.network(
-                          studio.images!.first.url,
+                          studio.images.first.url,
                           height: 160,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
-                            return _buildPlaceholderImage();
+                            return _buildEmptyImage();
                           },
                         )
-                      : _buildPlaceholderImage(),
+                      : _buildEmptyImage(),
                 ),
-                if (studio.averageRating != null && studio.averageRating! > 0)
+                if (studio.averageRating > 0)
                   Positioned(
                     top: 8,
                     right: 8,
@@ -61,7 +61,7 @@ class StudioCard extends StatelessWidget {
                           const Icon(Icons.star, color: Colors.amber, size: 14),
                           const SizedBox(width: 4),
                           Text(
-                            studio.averageRating!.toStringAsFixed(1),
+                            studio.averageRating.toStringAsFixed(1),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 12,
@@ -127,7 +127,7 @@ class StudioCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (studio.totalReviews != null && studio.totalReviews! > 0) ...[
+                  if (studio.totalReviews > 0) ...[
                     const SizedBox(height: 8),
                     Text(
                       '${studio.totalReviews} ulasan',
@@ -146,16 +146,12 @@ class StudioCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholderImage() {
+  Widget _buildEmptyImage() {
     return Container(
       height: 160,
       width: double.infinity,
       color: AppTheme.borderColor,
-      child: const Icon(
-        Icons.music_note,
-        color: Colors.grey,
-        size: 48,
-      ),
+      child: null,
     );
   }
 }

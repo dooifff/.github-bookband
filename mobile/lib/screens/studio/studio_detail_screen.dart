@@ -5,6 +5,7 @@ import '../../models/studio_model.dart';
 import '../../providers/studio_provider.dart';
 import '../../utils/formatters.dart';
 import '../booking/booking_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class StudioDetailScreen extends StatefulWidget {
   final String studioSlug;
@@ -61,15 +62,15 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                             color: AppTheme.border,
-                            child: const Icon(Icons.studio, size: 100),
+                            child: const Icon(Icons.music_note, size: 100),
                           ),
                         )
                       else
                         Container(
                           color: AppTheme.accent[100],
-                          child: const Icon(Icons.studio, size: 100),
+                          child: const Icon(Icons.music_note, size: 100),
                         ),
-                      const DecoratedBox(
+                      DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
@@ -82,12 +83,30 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                   ),
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.favorite_border, color: Colors.white),
-                    onPressed: () {
-                      // TODO: Implement favorite toggle with API
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Favorite toggle coming soon')),
+                  Consumer<StudioProvider>(
+                    builder: (context, provider, _) {
+                      final isFavorited = provider.selectedStudio?.isFavorited ?? false;
+                      return IconButton(
+                        tooltip: isFavorited
+                            ? 'Hapus dari favorit'
+                            : 'Tambahkan ke favorit',
+                        icon: Icon(
+                          isFavorited ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorited ? AppTheme.danger : Colors.white,
+                        ),
+                        onPressed: () async {
+                          final nowFavorited = await provider.toggleFavorite(studio.id);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                nowFavorited
+                                    ? 'Studio ditambahkan ke favorit'
+                                    : 'Studio dihapus dari favorit',
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
@@ -241,7 +260,7 @@ class _StudioDetailScreenState extends State<StudioDetailScreen> {
                               Text(
                                 hour.isClosed
                                     ? 'Closed'
-                                    : '${hour.openTime} - ${hour.closeTime}',
+                                    : '${hour.openTime ?? '--:--'} - ${hour.closeTime ?? '--:--'}',
                                 style: TextStyle(
                                   color: hour.isClosed ? Colors.red : Colors.green,
                                 ),

@@ -21,9 +21,13 @@ class PaymentProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
 
   /// Create payment for booking
-  Future<bool> createPayment({
+  ///
+  /// [paymentMethod] is the gateway method (e.g. `bank_transfer`), [bankCode]
+  /// the optional channel (e.g. `BCA`). Returns the created payment payload.
+  Future<Map<String, dynamic>?> createPayment({
     required int bookingId,
-    required String method,
+    required String paymentMethod,
+    String? bankCode,
     String? provider,
   }) async {
     _isLoading = true;
@@ -33,18 +37,18 @@ class PaymentProvider extends ChangeNotifier {
     try {
       _currentPayment = await _bookingRepository.createPayment(
         bookingId: bookingId,
-        method: method,
-        provider: provider,
+        method: paymentMethod,
+        provider: provider ?? bankCode,
       );
 
       _isLoading = false;
       notifyListeners();
-      return true;
+      return _currentPayment;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
       notifyListeners();
-      return false;
+      return null;
     }
   }
 

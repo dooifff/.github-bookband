@@ -57,7 +57,7 @@ class ProfileTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Profile berhasil diupdate',
+                'message' => 'Profil berhasil diperbarui',
             ]);
 
         $this->assertDatabaseHas('users', [
@@ -79,7 +79,7 @@ class ProfileTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Password berhasil diupdate',
+                'message' => 'Password berhasil diperbarui',
             ]);
 
         $this->user->refresh();

@@ -2,31 +2,33 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const adminNavigation = [
-  { name: 'Dasbor', href: '/admin', icon: '📊' },
-  { name: 'Pengguna', href: '/users', icon: '👥' },
-  { name: 'Studio', href: '/studios', icon: '🏠' },
-  { name: 'Pemesanan', href: '/bookings', icon: '📅' },
-  { name: 'Performa', href: '/performance', icon: '⚡' },
-  { name: 'Peringatan', href: '/alerts', icon: '🔔' },
-  { name: 'Perbandingan', href: '/comparison', icon: '📈' },
-  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
+  { name: 'Dashboard', href: '/admin', icon: '📊' },
+  { name: 'Users', href: '/users', icon: '👥' },
+  { name: 'Studios', href: '/studios', icon: '🏠' },
+  { name: 'Subscribers', href: '/subscribers', icon: '👥' },
+  { name: 'Bookings', href: '/bookings', icon: '📅' },
+  { name: 'Performance', href: '/performance', icon: '⚡' },
+  { name: 'Alerts', href: '/alerts', icon: '🔔' },
+  { name: 'Comparison', href: '/comparison', icon: '📈' },
+  { name: 'Settings', href: '/settings', icon: '⚙️' },
 ]
 
 const ownerNavigation = [
-  { name: 'Dasbor', href: '/owner/dashboard', icon: '📊' },
-  { name: 'Studio Saya', href: '/owner/studios', icon: '🏠' },
-  { name: 'Pemesanan', href: '/owner/bookings', icon: '📅' },
-  { name: 'Pendapatan', href: '/owner/revenue', icon: '💰' },
-  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
+  { name: 'Dashboard', href: '/owner/dashboard', icon: '📊' },
+  { name: 'My Studios', href: '/owner/studios', icon: '🏠' },
+  { name: 'Bookings', href: '/owner/bookings', icon: '📅' },
+  { name: 'Revenue', href: '/owner/revenue', icon: '💰' },
+  { name: 'Promos', href: '/owner/promos', icon: '🏷️' },
+  { name: 'Settings', href: '/settings', icon: '⚙️' },
 ]
 
 const customerNavigation = [
-  { name: 'Dasbor', href: '/customer/dashboard', icon: '📊' },
-  { name: 'Jelajahi Studio', href: '/customer/studios', icon: '🔍' },
-  { name: 'Pemesanan Saya', href: '/customer/bookings', icon: '📅' },
-  { name: 'Favorit', href: '/customer/favorites', icon: '❤️' },
-  { name: 'Notifikasi', href: '/customer/notifications', icon: '🔔' },
-  { name: 'Pengaturan', href: '/settings', icon: '⚙️' },
+  { name: 'Dashboard', href: '/customer/dashboard', icon: '📊' },
+  { name: 'Browse Studios', href: '/customer/studios', icon: '🔍' },
+  { name: 'My Bookings', href: '/customer/bookings', icon: '📅' },
+  { name: 'Favorites', href: '/customer/favorites', icon: '❤️' },
+  { name: 'Notifications', href: '/customer/notifications', icon: '🔔' },
+  { name: 'Settings', href: '/settings', icon: '⚙️' },
 ]
 
 interface AdminLayoutProps {
@@ -38,9 +40,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const isOwner = user?.role === 'owner'
-  const isCustomer = user?.role === 'customer'
-  const navigation = isCustomer ? customerNavigation : isOwner ? ownerNavigation : adminNavigation
+  const navigation = user?.role === 'customer' ? customerNavigation : user?.role === 'owner' ? ownerNavigation : adminNavigation
 
   const handleLogout = async () => {
     await logout()
@@ -49,25 +49,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   const getRoleBadge = (role: string) => {
     const styles: Record<string, string> = {
-      super_admin: 'bg-red-500/10 text-red-400 border border-red-500/20',
-      admin:       'bg-accent/10 text-accent border border-accent/20',
-      owner:       'bg-success/10 text-success border border-success/20',
+      super_admin: 'bg-[#e53e3e]/10 text-[#e53e3e] border border-[#e53e3e]/20',
+      admin:       'bg-[#e53e3e]/10 text-[#e53e3e] border border-[#e53e3e]/20',
+      owner:       'bg-[#48bb78]/10 text-[#48bb78] border border-[#48bb78]/20',
       customer:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
     }
-    return styles[role] || 'bg-text-muted/10 text-text-muted border border-border'
+    return styles[role] || 'bg-white/5 text-gray-400 border border-white/10'
   }
 
   return (
-    <div className="min-h-screen flex bg-primary">
+    <div className="min-h-screen flex bg-[#050505]">
       {/* ─── Sidebar ─── */}
-      <aside className="w-64 bg-surface border-r border-border flex flex-col fixed top-0 left-0 h-full z-30">
-        {/* Logo area — links back to landing page */}
-        <div className="h-16 flex items-center px-6 border-b border-border/60">
+      <aside className="w-64 bg-[#080808] border-r border-white/5 flex flex-col fixed top-0 left-0 h-full z-30">
+        {/* Logo area */}
+        <div className="h-16 flex items-center px-6 border-b border-white/5">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/25 to-accent/5 flex items-center justify-center border border-accent/10 group-hover:border-accent/25 transition-all">
-              <span className="text-sm">🎸</span>
-            </div>
-            <span className="gold-text-static font-bold text-base tracking-tight">StudioBook</span>
+            <span className="font-black text-xl tracking-tight text-white" style={{ fontFamily: 'Impact, sans-serif', fontStyle: 'italic' }}>
+              STUDIO<span className="text-[#e53e3e]">BOOK</span>
+            </span>
           </Link>
         </div>
 
@@ -80,75 +79,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`relative flex items-center gap-3 px-3.5 py-2.5 rounded text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-accent/8 text-accent sidebar-active'
-                    : 'text-text-secondary hover:bg-surface-lighter/60 hover:text-text-primary'
+                    ? 'bg-[#e53e3e]/10 text-[#e53e3e]'
+                    : 'text-gray-400 hover:bg-[#111] hover:text-white'
                 }`}
               >
                 <span className="text-base w-5 text-center">{item.icon}</span>
-                <span>{item.name}</span>
+                <span className="tracking-wide">{item.name}</span>
                 {isActive && (
-                  <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-accent/60" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[60%] bg-[#e53e3e] rounded-r" />
                 )}
               </Link>
             )
           })}
         </nav>
 
-        {/* Quick Switch (super_admin) */}
-        {user?.role === 'super_admin' && (
-          <div className="px-3 pb-3">
-            <div className="glass-subtle rounded-xl p-3">
-              <p className="text-text-muted text-[0.65rem] font-medium tracking-widest uppercase mb-2.5 px-1">Ganti Tampilan</p>
-              <div className="flex gap-1">
-                <Link
-                  to="/admin"
-                  className={`flex-1 text-center py-1.5 text-[0.65rem] font-medium rounded-lg transition-all ${
-                    !isOwner && !isCustomer
-                      ? 'bg-accent text-primary shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-secondary hover:bg-surface-lighter/60'
-                  }`}
-                >Admin</Link>
-                <Link
-                  to="/owner/dashboard"
-                  className={`flex-1 text-center py-1.5 text-[0.65rem] font-medium rounded-lg transition-all ${
-                    isOwner
-                      ? 'bg-accent text-primary shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-secondary hover:bg-surface-lighter/60'
-                  }`}
-                >Pemilik</Link>
-                <Link
-                  to="/customer/dashboard"
-                  className={`flex-1 text-center py-1.5 text-[0.65rem] font-medium rounded-lg transition-all ${
-                    isCustomer
-                      ? 'bg-accent text-primary shadow-sm shadow-accent/20'
-                      : 'text-text-muted hover:text-text-secondary hover:bg-surface-lighter/60'
-                  }`}
-                >Pelanggan</Link>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* User profile */}
-        <div className="p-3 border-t border-border/60">
-          <div className="glass-subtle rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 bg-gradient-to-br from-accent/20 to-accent/5 rounded-full flex items-center justify-center border border-accent/10 flex-shrink-0">
-              <span className="text-accent text-sm font-semibold">
+        <div className="p-3 border-t border-white/5">
+          <div className="flex items-center gap-3 p-2 rounded bg-[#0d0d0d] border border-white/5">
+            <div className="w-9 h-9 bg-gradient-to-br from-[#e53e3e]/25 to-[#e53e3e]/5 rounded-full flex items-center justify-center border border-[#e53e3e]/15 flex-shrink-0">
+              <span className="text-[#e53e3e] text-sm font-semibold">
                 {user?.name?.charAt(0) || 'A'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-text-primary text-sm font-medium truncate leading-tight">{user?.name}</p>
-              <span className={`inline-block mt-0.5 px-2 py-0.5 text-[0.6rem] font-medium rounded-full ${getRoleBadge(user?.role || '')}`}>
+              <p className="text-white text-sm font-medium truncate leading-tight">{user?.name}</p>
+              <span className={`inline-block mt-0.5 px-2 py-0.5 text-[0.6rem] font-semibold rounded ${getRoleBadge(user?.role || '')}`}>
                 {user?.role?.replace('_', ' ')}
               </span>
             </div>
             <button
               onClick={handleLogout}
-              className="text-text-muted hover:text-danger transition-colors p-1.5 rounded-lg hover:bg-danger/10"
-              title="Keluar"
+              className="text-gray-500 hover:text-[#e53e3e] transition-colors p-1.5 rounded hover:bg-[#e53e3e]/10"
+              title="Logout"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -161,8 +125,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* ─── Main Content ─── */}
-      <main className="flex-1 ml-64 min-h-screen">
-        <div className="p-8 max-w-[1400px] mx-auto">
+      <main className="flex-1 ml-64 min-h-screen relative">
+        <div className="relative z-10 px-8 py-6 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>

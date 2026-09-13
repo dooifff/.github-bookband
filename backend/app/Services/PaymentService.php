@@ -24,8 +24,11 @@ class PaymentService
      */
     private function configureMidtrans(): void
     {
-        \Midtrans\Config::$serverKey = config('payment.midtrans.server_key', '');
-        \Midtrans\Config::$clientKey = config('payment.midtrans.client_key', '');
+        $serverKey = config('payment.midtrans.server_key', '');
+        $clientKey = config('payment.midtrans.client_key', '');
+
+        \Midtrans\Config::$serverKey = $serverKey;
+        \Midtrans\Config::$clientKey = $clientKey;
         \Midtrans\Config::$isProduction = config('payment.midtrans.is_production', false);
         \Midtrans\Config::$isSanitized = true;
         \Midtrans\Config::$is3ds = true;
@@ -34,6 +37,15 @@ class PaymentService
             CURLOPT_SSL_VERIFYHOST => 0,
             CURLOPT_HTTPHEADER => [],
         ];
+    }
+
+    /**
+     * Check if Midtrans is properly configured
+     */
+    private function isMidtransConfigured(): bool
+    {
+        $serverKey = config('payment.midtrans.server_key', '');
+        return !empty($serverKey) && $serverKey !== '';
     }
 
     /**
@@ -86,38 +98,56 @@ class PaymentService
             // Build Midtrans transaction payload
             $transactionData = $this->buildTransactionData($payment, $booking);
 
-            try {
-                Log::info('Midtrans Snap request', [
+            // Check if Midtrans is configured
+            if (!$this->isMidtransConfigured()) {
+                Log::warning('Midtrans keys not configured, using sandbox mode', [
                     'payment_code' => $paymentCode,
-                    'payload' => $transactionData,
                 ]);
 
-                // Get Snap token from Midtrans
-                $snapResponse = Snap::createTransaction($transactionData);
-
-                Log::info('Midtrans Snap response', [
-                    'payment_code' => $paymentCode,
-                    'response' => (array) $snapResponse,
-                ]);
-
+                // Sandbox mode: create fake success response for testing
                 $payment->update([
-                    'provider_reference' => $snapResponse->token,
-                    'payment_url' => $snapResponse->redirect_url,
-                    'raw_response' => (array) $snapResponse,
+                    'provider_payment_id' => 'sandbox_' . $paymentCode,
+                    'payment_url' => config('app.url') . '/customer/bookings?payment=sandbox&code=' . $paymentCode,
+                    'raw_response' => [
+                        'token' => 'sandbox_' . $paymentCode,
+                        'redirect_url' => config('app.url') . '/customer/bookings?payment=sandbox&code=' . $paymentCode,
+                        'mode' => 'sandbox',
+                    ],
                 ]);
-            } catch (\Exception $e) {
-                Log::error('Midtrans Snap error', [
-                    'payment_code' => $paymentCode,
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
+            } else {
+                try {
+                    Log::info('Midtrans Snap request', [
+                        'payment_code' => $paymentCode,
+                        'payload' => $transactionData,
+                    ]);
 
-                $payment->update([
-                    'status' => 'failed',
-                    'raw_response' => ['error' => $e->getMessage()],
-                ]);
+                    // Get Snap token from Midtrans
+                    $snapResponse = Snap::createTransaction($transactionData);
 
-                throw new InvalidArgumentException('Gagal membuat pembayaran Midtrans: ' . $e->getMessage());
+                    Log::info('Midtrans Snap response', [
+                        'payment_code' => $paymentCode,
+                        'response' => (array) $snapResponse,
+                    ]);
+
+                    $payment->update([
+                        'provider_payment_id' => $snapResponse->token,
+                        'payment_url' => $snapResponse->redirect_url,
+                        'raw_response' => (array) $snapResponse,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Midtrans Snap error', [
+                        'payment_code' => $paymentCode,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+
+                    $payment->update([
+                        'status' => 'failed',
+                        'raw_response' => ['error' => $e->getMessage()],
+                    ]);
+
+                    throw new InvalidArgumentException('Gagal membuat pembayaran Midtrans: ' . $e->getMessage());
+                }
             }
 
             return $payment->fresh();
@@ -208,7 +238,7 @@ class PaymentService
             // Update payment
             $payment->update([
                 'status' => $status,
-                'provider_reference' => $payload['transaction_id'] ?? $payment->provider_reference,
+                'provider_payment_id' => $payload['transaction_id'] ?? $payment->provider_payment_id,
                 'payment_type' => $payload['payment_type'] ?? null,
                 'raw_response' => $payload,
                 'paid_at' => in_array($status, ['paid']) ? now() : $payment->paid_at,

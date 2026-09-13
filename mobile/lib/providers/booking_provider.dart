@@ -6,8 +6,8 @@ import '../services/api_service.dart';
 class BookingProvider extends ChangeNotifier {
   final BookingRepository _bookingRepository;
   
-  List<BookingModel> _bookings = [];
-  BookingModel? _selectedBooking;
+  List<Booking> _bookings = [];
+  Booking? _selectedBooking;
   bool _isLoading = false;
   String? _error;
   int _currentPage = 1;
@@ -25,8 +25,8 @@ class BookingProvider extends ChangeNotifier {
 
   BookingProvider() : _bookingRepository = BookingRepository(ApiService());
 
-  List<BookingModel> get bookings => _bookings;
-  BookingModel? get selectedBooking => _selectedBooking;
+  List<Booking> get bookings => _bookings;
+  Booking? get selectedBooking => _selectedBooking;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMore => _hasMore;
@@ -59,7 +59,7 @@ class BookingProvider extends ChangeNotifier {
         page: _currentPage,
       );
 
-      final newBookings = result['bookings'] as List<BookingModel>;
+      final newBookings = result['bookings'] as List<Booking>;
       final meta = result['meta'];
 
       if (refresh) {
@@ -98,12 +98,24 @@ class BookingProvider extends ChangeNotifier {
   }
 
   /// Create booking
-  Future<BookingModel?> createBooking({String? notes}) async {
-    if (_selectedStudioId == null || 
-        _selectedRoomId == null ||
-        _selectedDate == null ||
-        _selectedStartTime == null ||
-        _selectedEndTime == null) {
+  ///
+  /// The parameters override the values collected in the booking form, so a
+  /// screen that already holds the selection can book in one call.
+  Future<Booking?> createBooking({
+    int? studioId,
+    int? roomId,
+    String? bookingDate,
+    String? startTime,
+    String? endTime,
+    String? notes,
+  }) async {
+    final studio = studioId ?? _selectedStudioId;
+    final room = roomId ?? _selectedRoomId;
+    final date = bookingDate ?? _selectedDate;
+    final start = startTime ?? _selectedStartTime;
+    final end = endTime ?? _selectedEndTime;
+
+    if (studio == null || room == null || date == null || start == null || end == null) {
       _error = 'Lengkapi data booking terlebih dahulu';
       notifyListeners();
       return null;
@@ -115,11 +127,11 @@ class BookingProvider extends ChangeNotifier {
 
     try {
       final booking = await _bookingRepository.createBooking(
-        studioId: _selectedStudioId!,
-        roomId: _selectedRoomId!,
-        date: _selectedDate!,
-        startTime: _selectedStartTime!,
-        endTime: _selectedEndTime!,
+        studioId: studio,
+        roomId: room,
+        date: date,
+        startTime: start,
+        endTime: end,
         promoCode: _promoCode,
         notes: notes,
       );

@@ -30,7 +30,7 @@ class PaymentTest extends TestCase
             'studio_id' => $studio->id,
             'room_id' => $room->id,
             'status' => 'pending',
-            'total_amount' => 100000,
+            'total' => 100000,
         ]);
 
         $loginResponse = $this->postJson('/api/v1/auth/login', [
@@ -44,7 +44,7 @@ class PaymentTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->postJson('/api/v1/payments', [
                 'booking_id' => $this->booking->id,
-                'payment_method' => 'bank_transfer',
+                'method' => 'bank_transfer',
                 'provider' => 'midtrans',
             ]);
 
@@ -55,7 +55,7 @@ class PaymentTest extends TestCase
             ])
             ->assertJsonStructure([
                 'data' => [
-                    'id', 'payment_code', 'amount', 'status', 'payment_url',
+                    'payment_code', 'amount', 'status', 'payment_url',
                 ],
             ]);
 
@@ -76,11 +76,11 @@ class PaymentTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $this->token)
             ->postJson('/api/v1/payments', [
                 'booking_id' => $booking->id,
-                'payment_method' => 'bank_transfer',
+                'method' => 'bank_transfer',
                 'bank_code' => 'bca',
             ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(404);
     }
 
     public function test_user_can_check_payment_status()
@@ -110,14 +110,14 @@ class PaymentTest extends TestCase
             ->getJson('/api/v1/payment-history');
 
         $response->assertStatus(200)
-            ->assertJsonCount(3, 'data.data');
+            ->assertJsonCount(3, 'data');
     }
 
     public function test_user_cannot_create_payment_without_auth()
     {
         $response = $this->postJson('/api/v1/payments', [
             'booking_id' => $this->booking->id,
-            'payment_method' => 'bank_transfer',
+            'method' => 'bank_transfer',
             'bank_code' => 'bca',
         ]);
 

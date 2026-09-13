@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
 import '../repositories/auth_repository.dart';
 import '../services/api_service.dart';
+import '../services/google_sign_in_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
   
-  UserModel? _user;
+  User? _user;
   String? _token;
   bool _isLoading = false;
   String? _error;
 
   AuthProvider() : _authRepository = AuthRepository(ApiService());
 
-  UserModel? get user => _user;
+  User? get user => _user;
   String? get token => _token;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _user != null && _token != null;
@@ -95,6 +97,44 @@ class AuthProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Login/register lewat Google
+  ///
+  /// [role] hanya dipakai bila email Google belum pernah terdaftar.
+  Future<bool> loginWithGoogle({String? role}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final idToken = await GoogleSignInService.instance.getIdToken();
+      final result = await _authRepository.googleLogin(
+        idToken: idToken,
+        role: role,
+      );
+
+      _user = result['user'];
+      _token = result['token'];
+      await ApiService().setToken(_token!);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on GoogleSignInException catch (e) {
+      // Pembatalan oleh pengguna bukan error yang perlu ditampilkan.
+      _error = e.code == GoogleSignInExceptionCode.canceled
+          ? null
+          : (e.description ?? 'Login dengan Google gagal');
+      _isLoading = false;
+      notifyListeners();
+      return false;
     } catch (e) {
       _error = e.toString();
       _isLoading = false;
@@ -193,6 +233,34 @@ class AuthProvider extends ChangeNotifier {
     try {
       await _authRepository.forgotPassword(email);
       
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Reset password memakai token yang dikirim ke email
+  Future<bool> resetPassword({
+    required String token,
+    required String email,
+    required String password,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _authRepository.resetPassword(
+        token: token,
+        email: email,
+        password: password,
+      );
+
       _isLoading = false;
       notifyListeners();
       return true;

@@ -6,8 +6,8 @@ import '../services/api_service.dart';
 class StudioProvider extends ChangeNotifier {
   final StudioRepository _studioRepository;
   
-  List<StudioModel> _studios = [];
-  StudioModel? _selectedStudio;
+  List<Studio> _studios = [];
+  Studio? _selectedStudio;
   bool _isLoading = false;
   String? _error;
   int _currentPage = 1;
@@ -24,8 +24,8 @@ class StudioProvider extends ChangeNotifier {
 
   StudioProvider() : _studioRepository = StudioRepository(ApiService());
 
-  List<StudioModel> get studios => _studios;
-  StudioModel? get selectedStudio => _selectedStudio;
+  List<Studio> get studios => _studios;
+  Studio? get selectedStudio => _selectedStudio;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get hasMore => _hasMore;
@@ -57,7 +57,7 @@ class StudioProvider extends ChangeNotifier {
         page: _currentPage,
       );
 
-      final newStudios = result['studios'] as List<StudioModel>;
+      final newStudios = result['studios'] as List<Studio>;
       final meta = result['meta'];
 
       if (refresh) {
@@ -93,6 +93,12 @@ class StudioProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Get studio detail by slug
+  Future<Studio?> getStudioBySlug(String slug) async {
+    await getStudioDetail(slug);
+    return _selectedStudio;
   }
 
   /// Search studios
@@ -149,12 +155,17 @@ class StudioProvider extends ChangeNotifier {
     try {
       final isFavorited = await _studioRepository.toggleFavorite(studioId);
       
-      // Update studio in list
+      // Update studio in list and the currently opened studio detail.
       final index = _studios.indexWhere((s) => s.id == studioId);
       if (index != -1) {
         _studios[index].isFavorited = isFavorited;
-        notifyListeners();
       }
+
+      if (_selectedStudio?.id == studioId) {
+        _selectedStudio!.isFavorited = isFavorited;
+      }
+
+      notifyListeners();
 
       return isFavorited;
     } catch (e) {

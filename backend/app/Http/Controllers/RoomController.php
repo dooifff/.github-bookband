@@ -9,15 +9,16 @@ use App\Models\Studio;
 use App\Models\StudioRoom;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class RoomController extends Controller
 {
     /**
-     * List rooms for a studio
+     * List rooms for a studio (public route uses the studio slug)
      */
-    public function index(Request $request, int $studioId)
+    public function index(Request $request, string $slug)
     {
-        $studio = Studio::findOrFail($studioId);
+        $studio = Studio::where('slug', $slug)->firstOrFail();
 
         $query = $studio->rooms();
 
@@ -32,6 +33,30 @@ class RoomController extends Controller
             StudioRoomResource::collection($rooms),
             'Rooms retrieved successfully'
         );
+    }
+
+    /**
+     * List owner's rooms for a studio (owner only)
+     * Shows all rooms including inactive, with rooms_count
+     */
+    public function ownerRooms(Request $request, int $studioId): JsonResponse
+    {
+        $studio = Studio::findOrFail($studioId);
+
+        // Check ownership
+        if ($studio->owner_id !== $request->user()->id) {
+            return $this->errorResponse('Anda tidak memiliki akses ke studio ini', 403);
+        }
+
+        $rooms = $studio->rooms()->with('equipment')->get();
+        $activeCount = $rooms->where('is_active', true)->count();
+        $totalCount = $rooms->count();
+
+        return $this->successResponse([
+            'data' => StudioRoomResource::collection($rooms),
+            'rooms_count' => $totalCount,
+            'active_rooms_count' => $activeCount,
+        ], 'Rooms retrieved successfully');
     }
 
     /**

@@ -3,6 +3,7 @@ import '../../models/booking_model.dart';
 import '../../utils/formatters.dart';
 import '../home/home_screen.dart';
 import '../bookings/bookings_screen.dart';
+import '../../core/theme/app_theme.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
   final Booking booking;

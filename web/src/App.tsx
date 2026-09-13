@@ -2,6 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import LandingPage from './pages/landing/LandingPage'
 import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
+import DownloadPage from './pages/download/DownloadPage'
+
 import Dashboard from './pages/dashboard/Dashboard'
 import UsersPage from './pages/users/UsersPage'
 import StudiosPage from './pages/studios/StudiosPage'
@@ -11,6 +16,8 @@ import OwnerDashboard from './pages/owner/OwnerDashboard'
 import OwnerStudiosPage from './pages/owner/OwnerStudiosPage'
 import OwnerBookingsPage from './pages/owner/OwnerBookingsPage'
 import OwnerRevenuePage from './pages/owner/OwnerRevenuePage'
+import OwnerPromosPage from './pages/owner/OwnerPromosPage'
+import SuperAdminSubscribersPage from './pages/admin/SuperAdminSubscribersPage'
 import CustomerDashboard from './pages/customer/CustomerDashboard'
 import CustomerBookingsPage from './pages/customer/CustomerBookingsPage'
 import CustomerStudiosPage from './pages/customer/CustomerStudiosPage'
@@ -104,6 +111,11 @@ function AppRoutes() {
       {/* Public Routes */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={user ? <RoleRedirect /> : <Login />} />
+      <Route path="/register" element={user ? <RoleRedirect /> : <Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/download" element={<DownloadPage />} />
+
 
       {/* Admin Routes */}
       <Route path="/admin" element={
@@ -151,6 +163,11 @@ function AppRoutes() {
           <ScheduleSettings />
         </ProtectedRoute>
       } />
+      <Route path="/subscribers" element={
+        <ProtectedRoute requiredRole="admin">
+          <SuperAdminSubscribersPage />
+        </ProtectedRoute>
+      } />
 
       {/* Owner Routes */}
       <Route path="/owner/dashboard" element={
@@ -171,6 +188,11 @@ function AppRoutes() {
       <Route path="/owner/revenue" element={
         <ProtectedRoute requiredRole="owner">
           <OwnerRevenuePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/owner/promos" element={
+        <ProtectedRoute requiredRole="owner">
+          <OwnerPromosPage />
         </ProtectedRoute>
       } />
 

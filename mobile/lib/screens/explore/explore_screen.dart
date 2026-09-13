@@ -34,7 +34,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   void initState() {
     super.initState();
-    _loadStudios();
+    // Deferred: the provider notifies its listeners synchronously, which is
+    // not allowed while the first build is still running.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadStudios();
+    });
   }
 
   @override

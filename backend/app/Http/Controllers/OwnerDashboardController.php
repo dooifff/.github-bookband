@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Studio;
 use App\Models\Payment;
+use App\Services\ProfanityFilter;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -129,7 +130,7 @@ class OwnerDashboardController extends Controller
                         'user' => $review->user->name,
                         'studio' => $review->studio->name,
                         'rating' => $review->rating,
-                        'comment' => $review->comment,
+                        'comment' => ProfanityFilter::censor($review->comment ?? ''),
                         'created_at' => $review->created_at->toISOString(),
                     ];
                 }),

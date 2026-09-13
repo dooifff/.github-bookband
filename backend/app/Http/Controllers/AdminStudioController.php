@@ -15,6 +15,11 @@ class AdminStudioController extends Controller
     {
         $query = Studio::with('owner:id,name,email');
 
+        // Subscription filter
+        if ($request->has('subscription_status')) {
+            $query->where('subscription_status', $request->subscription_status);
+        }
+
         // Search filter
         if ($request->has('search')) {
             $search = $request->search;
@@ -39,7 +44,7 @@ class AdminStudioController extends Controller
             $query->where('city', $request->city);
         }
 
-        $studios = $query->orderBy('created_at', 'desc')->paginate(20);
+        $studios = $query->withCount('rooms')->orderBy('created_at', 'desc')->paginate(20);
 
         return response()->json([
             'success' => true,
@@ -54,6 +59,13 @@ class AdminStudioController extends Controller
                 'is_active' => $studio->is_active,
                 'average_rating' => $studio->average_rating,
                 'total_reviews' => $studio->total_reviews,
+                'rooms_count' => $studio->rooms_count,
+                'subscription' => [
+                    'status' => $studio->subscription_status,
+                    'expires_at' => $studio->subscription_expires_at?->toISOString(),
+                    'warning_level' => $studio->subscription_warning_level,
+                    'last_warning_at' => $studio->subscription_last_warning_at?->toISOString(),
+                ],
                 'created_at' => $studio->created_at->toISOString(),
             ]),
             'meta' => [
@@ -91,6 +103,12 @@ class AdminStudioController extends Controller
                 'is_active' => $studio->is_active,
                 'average_rating' => $studio->average_rating,
                 'total_reviews' => $studio->total_reviews,
+                'subscription' => [
+                    'status' => $studio->subscription_status,
+                    'expires_at' => $studio->subscription_expires_at?->toISOString(),
+                    'warning_level' => $studio->subscription_warning_level,
+                    'last_warning_at' => $studio->subscription_last_warning_at?->toISOString(),
+                ],
                 'rooms' => $studio->rooms,
                 'images' => $studio->images,
                 'created_at' => $studio->created_at->toISOString(),

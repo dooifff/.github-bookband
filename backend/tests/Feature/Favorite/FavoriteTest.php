@@ -79,7 +79,7 @@ class FavoriteTest extends TestCase
             ->getJson('/api/v1/favorites');
 
         $response->assertStatus(200)
-            ->assertJsonCount(3, 'data.data');
+            ->assertJsonCount(3, 'data');
     }
 
     public function test_user_can_check_favorite_status()
@@ -96,7 +96,7 @@ class FavoriteTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
-                    'is_favorite' => true,
+                    'is_favorited' => true,
                 ],
             ]);
     }

@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 
 class StudioFactory extends Factory
 {
@@ -15,7 +14,6 @@ class StudioFactory extends Factory
         return [
             'owner_id' => User::factory()->owner(),
             'name' => $name,
-            'slug' => Str::slug($name),
             'description' => fake()->paragraph(),
             'address' => fake()->address(),
             'city' => fake()->city(),

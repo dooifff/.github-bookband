@@ -83,15 +83,15 @@ class ScheduleService
         string $endTime
     ): bool {
         $query = BlockedSchedule::where('studio_id', $studioId)
-            ->where(function ($q) use ($date) {
+            ->where(function ($q) use ($date, $startTime, $endTime) {
                 // All-day block for the date
                 $q->where(function ($q2) use ($date) {
-                    $q2->where('date', $date)
+                    $q2->whereDate('date', $date)
                        ->where('all_day', true);
                 })
                 // Or time-range block that overlaps
                 ->orWhere(function ($q2) use ($date, $startTime, $endTime) {
-                    $q2->where('date', $date)
+                    $q2->whereDate('date', $date)
                        ->where('all_day', false)
                        ->where('start_time', '<', $endTime)
                        ->where('end_time', '>', $startTime);
@@ -117,7 +117,7 @@ class ScheduleService
         ?int $excludeBookingId = null
     ): bool {
         $query = Booking::where('room_id', $roomId)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->whereNotIn('status', ['cancelled', 'failed', 'expired'])
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTime);
@@ -149,7 +149,7 @@ class ScheduleService
 
         // Get blocked times
         $blockedTimes = BlockedSchedule::where('studio_id', $studio->id)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->where(function ($q) use ($roomId) {
                 $q->whereNull('room_id')
                   ->orWhere('room_id', $roomId);
@@ -164,7 +164,7 @@ class ScheduleService
 
         // Get time blocks
         $timeBlocks = BlockedSchedule::where('studio_id', $studio->id)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->where('all_day', false)
             ->where(function ($q) use ($roomId) {
                 $q->whereNull('room_id')
@@ -174,7 +174,7 @@ class ScheduleService
 
         // Get existing bookings
         $bookings = Booking::where('room_id', $roomId)
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->whereNotIn('status', ['cancelled', 'failed', 'expired'])
             ->get(['start_time', 'end_time']);
 

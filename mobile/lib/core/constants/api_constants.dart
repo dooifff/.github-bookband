@@ -1,10 +1,11 @@
+import 'app_constants.dart';
+
 class ApiConstants {
-  // Base URLs
-  static const String baseUrl = 'http://localhost:8000';
-  static const String apiVersion = '/api/v1';
-  
-  // Full base URL
-  static const String apiUrl = '$baseUrl$apiVersion';
+  /// Base URL backend (mis. `http://localhost:8000/api/v1`).
+  ///
+  /// Diteruskan ke [AppConstants.baseUrl] supaya override server dari layar
+  /// login ikut berlaku di semua pemakaian.
+  static String get apiUrl => AppConstants.baseUrl;
 
   // Auth endpoints
   static const String register = '/auth/register';
@@ -102,6 +103,27 @@ class ApiConstants {
   static String adminStudioUnverify(int id) => '/admin/studios/$id/unverify';
   static String adminStudioActivate(int id) => '/admin/studios/$id/activate';
   static String adminStudioDeactivate(int id) => '/admin/studios/$id/deactivate';
+  static const String adminSubscriptions = '/admin/subscriptions';
+  static String adminSubscriptionDetail(int ownerId) => '/admin/subscriptions/$ownerId';
+  static String adminStudioSubscription(int studioId) => '/admin/studios/$studioId/subscription';
+  static const String adminBookings = '/admin/bookings';
+  static String adminBookingDetail(int id) => '/admin/bookings/$id';
+  static String adminBookingConfirm(int id) => '/admin/bookings/$id/confirm';
+  static String adminBookingCancel(int id) => '/admin/bookings/$id/cancel';
+
+  // Admin performance / monitoring endpoints
+  static const String adminPerformance = '/admin/performance';
+  static const String adminPerformanceAlerts = '/admin/performance/alerts';
+  static const String adminPerformanceAlertStats = '/admin/performance/alerts/stats';
+  static const String adminPerformanceAlertThresholds = '/admin/performance/alerts/thresholds';
+  static const String adminPerformanceCompare = '/admin/performance/compare';
+  static const String adminPerformanceCompareExport = '/admin/performance/compare/export';
+  static String adminPerformanceTrend(String metric) => '/admin/performance/compare/trend/$metric';
+  static const String adminEmailSend = '/admin/performance/email/send';
+  static const String adminEmailSchedule = '/admin/performance/email/schedule';
+  static const String adminEmailWeekly = '/admin/performance/email/weekly';
+  static const String adminEmailDaily = '/admin/performance/email/daily';
+  static const String adminEmailMonthly = '/admin/performance/email/monthly';
 
   // Timeouts
   static const int connectTimeout = 15000;

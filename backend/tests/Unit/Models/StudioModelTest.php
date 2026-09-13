@@ -30,7 +30,7 @@ class StudioModelTest extends TestCase
     public function test_studio_belongs_to_owner()
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $studio = Studio::factory()->create(['user_id' => $owner->id]);
+        $studio = Studio::factory()->create(['owner_id' => $owner->id]);
 
         $this->assertInstanceOf(User::class, $studio->owner);
         $this->assertEquals($owner->id, $studio->owner->id);
@@ -87,8 +87,7 @@ class StudioModelTest extends TestCase
     public function test_studio_has_many_reviews()
     {
         $review = Review::factory()->create([
-            'reviewable_type' => Studio::class,
-            'reviewable_id' => $this->studio->id,
+            'studio_id' => $this->studio->id,
         ]);
 
         $this->assertTrue($this->studio->reviews->contains($review));
@@ -123,7 +122,7 @@ class StudioModelTest extends TestCase
             'is_primary' => false,
         ]);
 
-        $primary = $this->studio->primary_image;
+        $primary = $this->studio->images()->where('is_primary', true)->first();
         $this->assertNotNull($primary);
         $this->assertTrue($primary->is_primary);
     }
@@ -153,14 +152,13 @@ class StudioModelTest extends TestCase
             'province' => 'DKI Jakarta',
         ]);
 
-        $this->assertEquals('Jl. Test No. 123, Jakarta, DKI Jakarta', $studio->address_full);
+        $this->assertEquals('Jl. Test No. 123, Jakarta, DKI Jakarta', $studio->full_address);
     }
 
     public function test_studio_calculates_average_rating()
     {
         Review::factory()->count(3)->create([
-            'reviewable_type' => Studio::class,
-            'reviewable_id' => $this->studio->id,
+            'studio_id' => $this->studio->id,
             'rating' => 4,
         ]);
 
@@ -171,10 +169,10 @@ class StudioModelTest extends TestCase
     public function test_studio_has_total_reviews_count()
     {
         Review::factory()->count(5)->create([
-            'reviewable_type' => Studio::class,
-            'reviewable_id' => $this->studio->id,
+            'studio_id' => $this->studio->id,
         ]);
 
+        $this->studio->refresh();
         $this->assertEquals(5, $this->studio->total_reviews);
     }
 }
